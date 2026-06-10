@@ -1,0 +1,25 @@
+{
+  "name": "BY-7 Fuel Bunkering Calculator",
+  "short_name": "BY-7 Bunkering",
+  "description": "BY-7 Fuel Bunkering Calculator v60 - PWA with anonymous Plausible analytics - header label fixed",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#111111",
+  "orientation": "landscape",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

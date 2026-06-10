@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>BY-7 Fuel Bunkering Calculator v60 - Single File - By N. Kalodoukas v60 - PWA - By N. Kalodoukas</title>
+<meta name="theme-color" content="#111111">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="BY-7 Bunkering">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+<style>
+  :root{--b:#111;--g:#f2f2f2;--bg:#fff;--accent:#0b5;--warn:#d98200;--bad:#c00}
+  body{font-family:Arial,Helvetica,sans-serif;margin:0;background:#fafafa;color:#111;font-size:14px}
+  header{background:#111;color:#fff;padding:12px 18px}
+  h1{font-size:20px;margin:0 0 4px} h2{font-size:18px;margin:18px 0 8px} h3{font-size:16px;margin:14px 0 6px}
+  .wrap{max-width:1250px;margin:auto;padding:14px}
+  .grid{display:grid;grid-template-columns:repeat(4,minmax(170px,1fr));gap:10px}
+  .card{background:#fff;border:1px solid #ccc;border-radius:8px;padding:12px;margin:10px 0;box-shadow:0 1px 3px #0001}
+  label{font-weight:bold;font-size:12px;display:block;margin-bottom:3px}
+  input,select,textarea{width:100%;box-sizing:border-box;padding:7px;border:1px solid #aaa;border-radius:4px;font-size:14px;background:white}
+  button{padding:8px 12px;border:1px solid #111;border-radius:5px;background:#111;color:white;cursor:pointer;margin:3px 4px 3px 0}
+  button.secondary{background:#fff;color:#111} button.danger{background:#900} button.ok{background:#075}
+  table{width:100%;border-collapse:collapse;background:white} th,td{border:1px solid #111;padding:4px;text-align:center;font-size:12px;vertical-align:middle} th{background:#ddd}
+  .mini td,.mini th{font-size:11px;padding:3px}.right{text-align:right}.left{text-align:left}
+  .status{font-weight:bold;padding:6px;border-radius:4px;display:inline-block}.oktxt{color:#075}.warntxt{color:#d98200}.badtxt{color:#c00}.muted{color:#666}.note{background:#fff6d8;border-left:4px solid #d98200;padding:8px;margin:8px 0}.small{font-size:12px}.reportTitle{font-size:22px;font-weight:bold}.company{font-size:22px;font-weight:bold;letter-spacing:.5px}.toolbar{margin:8px 0}.hidden{display:none}
+
+  .formPage{page-break-after:always;break-after:page;margin-bottom:14px}
+  .formPage:last-child{page-break-after:auto;break-after:auto}
+  .headerSignature{font-size:12px;color:#ddd;margin-top:3px;letter-spacing:.2px}
+  .headerSignature b{color:#fff}
+
+  @media print{
+  @page{size:A4 landscape;margin:5mm}
+  header,.noPrint,.toolbar,.inputCard{display:none!important}
+  .wrap{max-width:none;padding:0} body{background:#fff}
+  .card{box-shadow:none;border:0;padding:0;margin:0}
+  .formPage{page-break-after:always;break-after:page;height:auto;overflow:hidden}
+  .formPage:last-child{page-break-after:auto;break-after:auto}
+  .printBreak{page-break-before:always}
+  th,td{font-size:8.5px;padding:1.5px}
+  .company{font-size:15px}
+  .reportTitle{font-size:13px}
+  table{page-break-inside:auto}
+  tr{page-break-inside:avoid;page-break-after:auto}
+}.wrap{max-width:none;padding:0} body{background:#fff}.card{box-shadow:none;border:0;padding:0;margin:0 0 12px}.printBreak{page-break-before:always} th,td{font-size:10px;padding:2px}}
+</style>
+<script defer data-domain="kalodoukas.github.io" src="https://plausible.io/js/script.js"></script>
+</head>
+<body>
+<header><h1>BY-7 Fuel Bunkering Calculator v60 - Single File - By N. Kalodoukas</h1><div>VS.TEC 026 Before / After Bunkering → VS.TEC 015 Differences / all selected fuel tanks + template export + verified data by manual review + dropdown fail-safe</div></header>
+<div class="wrap">
+  <div class="card inputCard">
+    <h2>Ship / Report header</h2>
+    <div class="grid">
+      <div><label>Company</label><input id="company" value="COSTAMARE SHIPPING COMPANY S.A"></div>
+      <div><label>Vessel</label><input id="vessel" value="CAPE AKRITAS"></div>
+      <div><label>Port</label><input id="port" placeholder="Port"></div>
+      <div><label>Form</label><input value="VS.TEC 026 / VS.TEC 015" readonly></div>
+      <div><label>Sea Temp °C</label><input id="seaTemp" type="number" step="0.1"></div>
+      <div><label>Air Temp °C</label><input id="airTemp" type="number" step="0.1"></div>
+      <div><label>Draft FWD</label><input id="draftFwd" placeholder="m"></div>
+      <div><label>Draft AFT</label><input id="draftAft" placeholder="m"></div>
+    </div>
+  </div>
+
+  <div class="card inputCard">
+    <h2>Tank measurement entry</h2>
+    <div class="grid">
+      <div><label>Stage</label><select id="stage"><option value="before">VS.TEC 026 Before Bunkering</option><option value="after">VS.TEC 026 After Bunkering</option></select></div>
+      <div><label>Tank</label><select id="tank">
+          <option value="NO1_HFO_P">NO. 1 H.F.O. T. (P)</option>
+          <option value="NO1_HFO_S">NO. 1 H.F.O. T. (S)</option>
+          <option value="NO2_HFO_P">NO. 2 H.F.O. T. (P)</option>
+          <option value="NO2_HFO_S">NO. 2 H.F.O. T. (S)</option>
+          <option value="HFO_SERV_P">H.F.O. SERV. T. (P)</option>
+          <option value="HFO_SETT_P">H.F.O. SETT. T. (P)</option>
+          <option value="ULSFO_STOR_P">ULTRA L/S F.O. STOR. T. (P)</option>
+          <option value="ULSFO_SETT_P">ULTRA L/S F.O. SETT. T. (P)</option>
+          <option value="ULSFO_SERV_P">ULTRA L/S F.O. SERV. T. (P)</option>
+          <option value="MGO_T_S">M.G.O.T. (S)</option>
+          <option value="MGO_SERV_S">M.G.O. SERV. T. (S)</option>
+          <option value="HFO_OVF_P">OVF / H.F.O. OVERFLOW T. (P)</option>
+        </select></div>
+      <div><label>Content</label><select id="content">
+          <option value="HFO">HFO</option>
+          <option value="LS FO">LS FO</option>
+          <option value="ULS FO">ULS FO</option>
+          <option value="MGO">MGO</option>
+          <option value="ULS MGO">ULS MGO</option>
+          <option value="DO">DO</option>
+        </select></div>
+      <div><label>S% / Sulphur %</label><input id="sulphurPct" type="number" step="0.001" value="0.000" placeholder="e.g. 0.50"></div>
+      <div><label>Measurement Type</label><select id="measType">
+          <option value="Sounding">Sounding</option>
+          <option value="Ullage">Ullage</option>
+        </select></div>
+      <div><label>Measurement Value (cm)</label><input id="measurement" type="number" step="0.1" value="600"></div>
+      <div><label>Date</label><input id="date" type="date"></div>
+      <div><label>Time</label><input id="time" type="time"></div>
+      <div><label>Trim value (m)</label><input id="trimVal" type="number" step="0.01" value="0.00"></div>
+      <div><label>Trim direction</label><select id="trimDir"><option value="0">Even keel / 0</option><option value="stern">By stern</option><option value="stem">By stem</option></select></div>
+      <div><label>Heel/List value (deg)</label><input id="heelVal" type="number" step="0.01" value="0.00"></div>
+      <div><label>Heel/List direction</label><select id="heelDir"><option value="0">Upright / 0</option><option value="P">Port</option><option value="S">Starboard</option></select></div>
+      <div><label>Observed Temp °C</label><input id="temp" type="number" step="0.1" value="30.0"></div>
+      <div><label>Density @15°C (kg/m³)</label><input id="dens15" type="number" step="0.1" value="990.0"></div>
+      <div><label>VCF Mode</label><select id="vcfMode"><option value="calc">Default API/ASTM 54B calculated</option><option value="manual">Manual VCF override</option><option value="compare">Calculated + compare manual</option></select></div>
+      <div><label>Manual VCF</label><input id="manualVcf" type="number" step="0.00001" value="0.99000"></div>
+    </div>
+    <div class="toolbar">
+      <button class="ok" onclick="calculateAndShow()">Calculate</button>
+      <button onclick="addCurrentToReport()">Add to selected VS.TEC 026</button>
+      <button class="secondary" onclick="clearInputs()">Clear input</button>
+    </div>
+    <div id="result" class="note small">Press Calculate.</div>
+  </div>
+
+  <div class="card">
+    <h2>Company report output</h2>
+    <div class="toolbar noPrint">
+      <button onclick="renderReports()">Refresh reports</button>
+      <button class="secondary" onclick="exportCSV('before')">Export Before CSV</button>
+      <button class="secondary" onclick="exportCSV('after')">Export After CSV</button>
+      <button class="secondary" onclick="exportCSV('diff')">Export VS.TEC 015 CSV</button>
+      <button class="secondary" onclick="exportCompanyXLS()">Export Template XLS - VS.TEC forms</button>
+      <button class="secondary" onclick="window.print()">Print / Save PDF</button>
+      <button class="secondary" onclick="saveReportsToFile()">Save Report JSON</button>
+      <button class="secondary" onclick="document.getElementById('loadJsonInput').click()">Load Report JSON</button>
+      <input id="loadJsonInput" type="file" accept="application/json" class="hidden" onchange="loadReportsFromFile(event)">
+      <button class="danger" onclick="clearReports()">Clear all reports</button>
+    </div>
+    <div id="reports"></div>
+    <div id="storageStatus" class="small muted"></div>
+  </div>
+
+  <div class="card small">
+    <h3>Technical notes</h3>
+    <ul>
+      <li>Fuel tank list includes the selected BY-7 fuel tanks plus <b>OVF / H.F.O. OVERFLOW T. (P)</b>. In v45 the calibration and heel correction tables supplied in <b>BY7_tables_original_layout_manual_verified.xlsx</b> are treated as <b>Verified by manual review</b>.</li>
+      <li><b>Export Template XLS</b> produces the company template-style forms based on the uploaded workbook: <b>015 BP</b>, <b>026 BFR</b> and <b>026 AFT</b>.</li><li>All selected tanks are always listed, including <b>OVF</b>. Tanks without measurements are exported with zero quantities. The latest saved measurement per tank/stage is used.</li><li>The export includes <b>S% / Sulphur %</b>, product totals by <b>HFO, LS FO, ULS FO, MGO, ULS MGO and DO</b>, and A4 landscape print settings fitted to one page per sheet.</li>
+      <li>For ullage entries, the app converts: <b>Sounding = Reference height − Ullage</b>. Reference height for this tank: <b>1858.7 cm</b>.</li>
+      <li>Trim is interpolated between calibration columns −4.0 m by stern to +2.0 m by stem. Heel/List correction is applied directly for <b>NO. 1 H.F.O. T. (S)</b>. For <b>NO. 1 H.F.O. T. (P)</b>, v17 uses a mirrored candidate of the sister tank correction. For <b>NO. 2 H.F.O. T. (P/S)</b>, v17 starts provisional heel correction candidates based on the located NO.2 heel correction pages; these must be visually verified before operational use.</li>
+      <li>Default VCF is an API/ASTM 54B-style calculated CTL estimate. For bunker-survey custody work, use <b>Manual VCF override</b> with the VCF from API/Dens or approved survey software.</li>
+      <li><b>v19:</b> Added provisional heel correction candidates for ULSFO storage/settling/service, MGO tank/service and OVF. These are active for calculation but marked as candidate until row-by-row QA is completed.</li>
+      <li><b>v50:</b> Single-file deployment. Only index.html is required to run the application. <b>v49:</b> Persistent save fix. <b>v47:</b> Dropdown fail-safe added for Tank / Content / Measurement Type. <b>v46:</b> Tank recognition fix added. Full tank list is now the master source for dropdown, reports and export. <b>v45:</b> Manual verification file received and accepted. The tables are now marked as verified by manual review for application development and reporting output.</li>
+      <li><b>v20:</b> Added persistent latest readings: Before/After reports are automatically saved in the browser local storage and restored when the app is reopened. JSON backup import/export was also added.</li>
+    </ul>
+  </div>
+</div>
+<script>
+const trimColumns=[-4,-3,-2,-1.5,-1,-0.5,0,0.5,1,2];
+const tankDB={
+  NO1_HFO_P:{
+    id:'NO1_HFO_P', display:'NO. 1 H.F.O. T. (P)', calibrationName:'NO. 1 H.F.O. T. (P)', content:'HFO', productGroup:'54B',
+    allowedMeasurementTypes:['Sounding','Ullage'], defaultMeasurementType:'Ullage', refHeightCm:1858.8,
+    nominalCapacityM3:1601.06, practicalCapacityM3:1601.06, tableSource:'BY-7 pages 109-115',
+    saturationVolume:1601.06, heelCorrectionAvailable:true, heelCorrectionMode:'mirror_NO1_HFO_S',
+    // Digitized candidate from BY-7 NO.1 H.F.O.T.(P), pages 109-115. Full table verification pending.
+    anchors0:[1.12,1.44,2.10,2.81,3.66,4.56,5.46,6.36,7.26,9.05],
+    anchors1545:[1588.77,1590.58,1592.39,1593.29,1594.20,1595.10,1596.00,1596.91,1597.81,1599.26]
+  },
+  NO1_HFO_S:{
+    id:'NO1_HFO_S', display:'NO. 1 H.F.O. T. (S)', calibrationName:'NO. 1 H.F.O. T. (S)', content:'HFO', productGroup:'54B',
+    allowedMeasurementTypes:['Sounding','Ullage'], defaultMeasurementType:'Ullage', refHeightCm:1858.7,
+    nominalCapacityM3:1601.05, practicalCapacityM3:1601.05, tableSource:'BY-7 pages 116-122',
+    saturationVolume:1601.05, heelCorrectionAvailable:true, heelCorrectionMode:'direct_NO1_HFO_S',
+    // Linearized table anchors transcribed from the calibration table; values at 0 cm and 1545 cm by trim column.
+    anchors0:[1.08,1.39,2.02,2.66,3.55,4.45,5.35,6.25,7.15,8.95],
+    anchors1545:[1588.74,1590.53,1592.32,1593.22,1594.11,1595.01,1595.90,1596.80,1597.69,1599.16]
+  },
+  NO2_HFO_P:{
+    id:'NO2_HFO_P',display:'NO. 2 H.F.O. T. (P)',calibrationName:'NO. 2 H.F.O. T. (P)',content:'HFO',productGroup:'54B',
+    allowedMeasurementTypes:['Sounding','Ullage'],defaultMeasurementType:'Ullage',refHeightCm:1858.2,
+    nominalCapacityM3:1800.35,practicalCapacityM3:1800.35,tableSource:'BY-7 pages 123-129',
+    saturationVolume:1800.35,maxSoundingCm:1575,anchorSoundingCm:1555,heelCorrectionAvailable:true,heelCorrectionMode:'direct_NO2_HFO_P_candidate',
+    anchors0:[0.60,0.78,1.13,1.49,1.99,2.49,2.99,3.50,4.00,5.01],
+    anchors1545:[1796.09,1798.20,1799.90,1800.34,1800.35,1800.35,1800.35,1800.35,1800.35,1800.35]
+  },
+  NO2_HFO_S:{
+    id:'NO2_HFO_S',display:'NO. 2 H.F.O. T. (S)',calibrationName:'NO. 2 H.F.O. T. (S)',content:'HFO',productGroup:'54B',
+    allowedMeasurementTypes:['Sounding','Ullage'],defaultMeasurementType:'Ullage',refHeightCm:1863.2,
+    nominalCapacityM3:1800.35,practicalCapacityM3:1800.35,tableSource:'BY-7 pages 130-136',
+    saturationVolume:1800.35,maxSoundingCm:1575,anchorSoundingCm:1555,heelCorrectionAvailable:true,heelCorrectionMode:'direct_NO2_HFO_P_candidate',
+    anchors0:[0.62,0.81,1.18,1.54,2.05,2.55,3.05,3.56,4.06,5.07],
+    anchors1545:[1796.00,1798.15,1799.89,1800.34,1800.35,1800.35,1800.35,1800.35,1800.35,1800.35]
+  },
+  HFO_SERV_P:{
+    id:'HFO_SERV_P',display:'H.F.O. SERV. T. (P)',calibrationName:'H.F.O. SERV. T. (P)',content:'HFO',productGroup:'54B',
+    allowedMeasurementTypes:['Sounding'],defaultMeasurementType:'Sounding',refHeightCm:552.9,
+    nominalCapacityM3:105.15,practicalCapacityM3:105.15,tableSource:'BY-7 pages 137-138',
+    saturationVolume:105.15,maxSoundingCm:335,anchorSoundingCm:285,heelCorrectionAvailable:true,heelCorrectionMode:'direct_HFO_SERV_P_candidate',
+    anchors0:[2.97,2.68,2.38,2.23,2.09,1.94,1.79,1.64,1.49,1.20],
+    anchors1545:[105.15,105.15,105.15,105.15,105.15,105.15,105.15,105.15,105.15,105.15]
+  },
+  HFO_SETT_P:{
+    id:'HFO_SETT_P',display:'H.F.O. SETT. T. (P)',calibrationName:'H.F.O. SETT. T. (P)',content:'HFO',productGroup:'54B',
+    allowedMeasurementTypes:['Sounding'],defaultMeasurementType:'Sounding',refHeightCm:552.9,
+    nominalCapacityM3:104.53,practicalCapacityM3:104.53,tableSource:'BY-7 pages 139-140',
+    saturationVolume:104.53,maxSoundingCm:335,anchorSoundingCm:285,heelCorrectionAvailable:true,heelCorrectionMode:'direct_HFO_SETT_P_candidate',
+    anchors0:[2.92,2.62,2.33,2.18,2.04,1.89,1.74,1.60,1.45,1.15],
+    anchors1545:[104.53,104.53,104.53,104.53,104.53,104.53,104.53,104.53,104.53,104.53]
+  },
+  ULSFO_STOR_P:{id:'ULSFO_STOR_P',display:'ULTRA L/S F.O. STOR. T. (P)',calibrationName:'ULTRA L/S F.O. STOR. T. (P)',content:'ULS FO',productGroup:'54B',allowedMeasurementTypes:['Sounding','Ullage'],defaultMeasurementType:'Sounding',refHeightCm:2983.7,nominalCapacityM3:406.87,practicalCapacityM3:406.87,tableSource:'BY-7 pages 141-149',saturationVolume:406.87,maxSoundingCm:2155,anchorSoundingCm:2140,heelCorrectionAvailable:true,heelCorrectionMode:'scaled_ULSFO_STOR_P_candidate',anchors0:[0.61,0.64,0.67,0.68,0.70,0.71,0.73,0.74,0.76,0.79],anchors1545:[406.67,406.71,406.74,406.76,406.78,406.80,406.82,406.83,406.85,406.85]},
+  ULSFO_SETT_P:{id:'ULSFO_SETT_P',display:'ULTRA L/S F.O. SETT. T. (P)',calibrationName:'ULTRA L/S F.O. SETT. T. (P)',content:'ULS FO',productGroup:'54B',allowedMeasurementTypes:['Sounding','Ullage'],defaultMeasurementType:'Sounding',refHeightCm:1443.0,nominalCapacityM3:120.10,practicalCapacityM3:120.10,tableSource:'BY-7 pages 150-154',saturationVolume:120.10,maxSoundingCm:1215,anchorSoundingCm:1200,heelCorrectionAvailable:true,heelCorrectionMode:'scaled_ULSFO_SETT_P_candidate',anchors0:[0.55,0.57,0.59,0.60,0.61,0.62,0.63,0.64,0.65,0.66],anchors1545:[119.69,119.71,119.73,119.74,119.75,119.76,119.77,119.78,119.79,119.81]},
+  ULSFO_SERV_P:{id:'ULSFO_SERV_P',display:'ULTRA L/S F.O. SERV. T. (P)',calibrationName:'ULTRA L/S F.O. SERV. T. (P)',content:'ULS FO',productGroup:'54B',allowedMeasurementTypes:['Sounding','Ullage'],defaultMeasurementType:'Sounding',refHeightCm:1449.0,nominalCapacityM3:120.10,practicalCapacityM3:120.10,tableSource:'BY-7 pages 155-159',saturationVolume:120.10,maxSoundingCm:1220,anchorSoundingCm:1200,heelCorrectionAvailable:true,heelCorrectionMode:'scaled_ULSFO_SERV_P_candidate',anchors0:[0.47,0.49,0.51,0.52,0.53,0.54,0.56,0.57,0.58,0.60],anchors1545:[119.61,119.63,119.66,119.67,119.68,119.69,119.70,119.71,119.72,119.75]},
+  MGO_T_S:{id:'MGO_T_S',display:'M.G.O.T. (S)',calibrationName:'M.G.O.T. (S)',content:'MGO',productGroup:'54B',allowedMeasurementTypes:['Sounding'],defaultMeasurementType:'Sounding',nominalCapacityM3:492.65,practicalCapacityM3:492.65,tableSource:'BY-7 pages 160-168',saturationVolume:492.65,maxSoundingCm:2080,anchorSoundingCm:2065,heelCorrectionAvailable:true,heelCorrectionMode:'scaled_MGO_T_S_candidate',anchors0:[0.67,0.70,0.73,0.75,0.76,0.77,0.78,0.80,0.82,0.85],anchors1545:[491.63,491.68,491.73,491.75,491.78,491.80,491.82,491.85,491.87,491.92]},
+  MGO_SERV_S:{id:'MGO_SERV_S',display:'M.G.O. SERV. T. (S)',calibrationName:'M.G.O. SERV. T. (S)',content:'MGO',productGroup:'54B',allowedMeasurementTypes:['Sounding'],defaultMeasurementType:'Sounding',nominalCapacityM3:154.41,practicalCapacityM3:154.41,tableSource:'BY-7 pages 169-175',saturationVolume:154.41,maxSoundingCm:1565,anchorSoundingCm:1550,heelCorrectionAvailable:true,heelCorrectionMode:'scaled_MGO_SERV_S_candidate',anchors0:[0.31,0.33,0.35,0.36,0.37,0.38,0.40,0.41,0.42,0.45],anchors1545:[154.20,154.23,154.25,154.26,154.27,154.28,154.29,154.31,154.32,154.34]},
+  HFO_OVF_P:{id:'HFO_OVF_P',display:'OVF / H.F.O. OVERFLOW T. (P)',calibrationName:'H.F.O. OVERFLOW T. (P)',content:'HFO',productGroup:'54B',allowedMeasurementTypes:['Sounding'],defaultMeasurementType:'Sounding',nominalCapacityM3:83.67,practicalCapacityM3:83.67,tableSource:'BY-7 pages 192-193',saturationVolume:83.67,maxSoundingCm:300,anchorSoundingCm:285,heelCorrectionAvailable:true,heelCorrectionMode:'scaled_OVF_P_candidate',anchors0:[0.09,0.10,0.12,0.12,0.13,0.15,0.16,0.17,0.18,0.21],anchors1545:[83.60,83.67,83.67,83.67,83.67,83.67,83.67,83.67,83.67,83.67]}
+};
+let reports={before:[],after:[]};
+const STORAGE_KEY='BY7_FUEL_BUNKERING_V20_REPORTS';
+const contentOptions=['HFO','LS FO','ULS FO','MGO','ULS MGO','DO'];
+let lastCalc=null;
+function allConfiguredTanks(){
+  // The company form tank list is the master list. This prevents the app from "losing" tanks if object ordering or an older cache is present.
+  if(typeof formTankRows !== 'undefined' && Array.isArray(formTankRows)){
+    return formTankRows.map(meta=>{
+      if(tankDB[meta.tankId]) return tankDB[meta.tankId];
+      // Fail-safe placeholder: the tank remains visible in the application and forms.
+      tankDB[meta.tankId]={
+        id:meta.tankId, display:meta.label, calibrationName:meta.label, content:meta.content||'HFO', productGroup:'54B',
+        allowedMeasurementTypes:['Sounding'], defaultMeasurementType:'Sounding',
+        nominalCapacityM3:meta.tankM3||0, practicalCapacityM3:meta.tankM3||0, tableSource:'Missing in tankDB - placeholder created',
+        pending:true
+      };
+      return tankDB[meta.tankId];
+    });
+  }
+  return Object.values(tankDB);
+}
+function sanitizeReportsAgainstTankDB(){
+  const valid=new Set(Object.keys(tankDB));
+  ['before','after'].forEach(stage=>{
+    if(!Array.isArray(reports[stage])) reports[stage]=[];
+    reports[stage]=reports[stage].filter(r=>r && valid.has(r.tankId));
+  });
+}
+function ensureSelectHasOptions(selectId, fallbackOptions){
+  const el=document.getElementById(selectId);
+  if(!el) return;
+  if(el.options && el.options.length>0) return;
+  fallbackOptions.forEach(item=>{
+    const o=document.createElement('option');
+    if(typeof item==='string'){ o.value=item; o.textContent=item; }
+    else { o.value=item.value; o.textContent=item.label; }
+    el.appendChild(o);
+  });
+}
+function fallbackPopulateCoreControls(){
+  const fallbackTanks=[
+    {value:'NO1_HFO_P',label:'NO. 1 H.F.O. T. (P)'},
+    {value:'NO1_HFO_S',label:'NO. 1 H.F.O. T. (S)'},
+    {value:'NO2_HFO_P',label:'NO. 2 H.F.O. T. (P)'},
+    {value:'NO2_HFO_S',label:'NO. 2 H.F.O. T. (S)'},
+    {value:'HFO_SERV_P',label:'H.F.O. SERV. T. (P)'},
+    {value:'HFO_SETT_P',label:'H.F.O. SETT. T. (P)'},
+    {value:'ULSFO_STOR_P',label:'ULTRA L/S F.O. STOR. T. (P)'},
+    {value:'ULSFO_SETT_P',label:'ULTRA L/S F.O. SETT. T. (P)'},
+    {value:'ULSFO_SERV_P',label:'ULTRA L/S F.O. SERV. T. (P)'},
+    {value:'MGO_T_S',label:'M.G.O.T. (S)'},
+    {value:'MGO_SERV_S',label:'M.G.O. SERV. T. (S)'},
+    {value:'HFO_OVF_P',label:'OVF / H.F.O. OVERFLOW T. (P)'}
+  ];
+  ensureSelectHasOptions('tank', fallbackTanks);
+  ensureSelectHasOptions('content', ['HFO','LS FO','ULS FO','MGO','ULS MGO','DO']);
+  ensureSelectHasOptions('measType', ['Sounding','Ullage']);
+}
+
+function setStorageStatus(msg){
+  const el=document.getElementById('storageStatus') || document.getElementById('result');
+  if(el){
+    el.innerHTML = '<span class="muted">'+String(msg).replace(/[&<>]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))+'</span>';
+  }
+}
+
+function init(){
+  try{
+    fallbackPopulateCoreControls();
+    const now=new Date(); document.getElementById('date').value=now.toISOString().slice(0,10); document.getElementById('time').value=now.toTimeString().slice(0,5);
+    loadPersistedReports();
+    const tankSel=document.getElementById('tank'); tankSel.innerHTML='';
+    const tanks=allConfiguredTanks();
+    tanks.forEach(t=>{
+      let o=document.createElement('option');
+      o.value=t.id;
+      const cleanDisplay=(t.display||'').replace(' - pending','');
+      const cleanCal=(t.calibrationName||'');
+      o.textContent = t.pending ? cleanDisplay+' - pending' : (cleanDisplay===cleanCal ? cleanDisplay : cleanDisplay+' / '+cleanCal);
+      tankSel.appendChild(o);
+    });
+    if(!tankSel.value && tanks.length) tankSel.value=tanks[0].id;
+    sanitizeReportsAgainstTankDB();
+    tankSel.addEventListener('change',updateTankFields);
+    const sp=document.getElementById('sulphurPct'); if(sp) sp.addEventListener('input',()=>{sp.dataset.userEdited='1';});
+    updateTankFields(); renderReports();
+    fallbackPopulateCoreControls();
+    setStorageStatus('Tank list loaded: '+tanks.length+' tanks. Last readings are stored locally.');
+  }catch(err){
+    console.error('BY7 init error:', err);
+    fallbackPopulateCoreControls();
+    const result=document.getElementById('result');
+    if(result) result.innerHTML='<span class="badtxt"><b>Initialization warning:</b> '+err.message+'</span>';
+    setStorageStatus('Fallback dropdowns loaded after initialization warning.');
+  }
+}
+function updateTankFields(){
+  const tankSelect=document.getElementById('tank');
+  let t=tankDB[tankSelect.value];
+  if(!t){
+    const tanks=allConfiguredTanks();
+    if(tanks.length){ tankSelect.value=tanks[0].id; t=tanks[0]; }
+  }
+  if(!t){ document.getElementById('result').innerHTML='<span class="badtxt"><b>Error:</b> No tank configuration loaded.</span>'; return; }
+  const contentSel=document.getElementById('content');
+  contentSel.innerHTML='';
+  contentOptions.forEach(x=>{let o=document.createElement('option'); o.value=x; o.textContent=x; contentSel.appendChild(o);});
+  contentSel.value=contentOptions.includes(t.content)?t.content:'HFO';
+  const sp=document.getElementById('sulphurPct'); if(sp && (!sp.dataset.userEdited || sp.value==='')) sp.value = (t.defaultSulphurPct!=null ? t.defaultSulphurPct : 0).toFixed(3);
+  const mt=document.getElementById('measType'); mt.innerHTML=''; (t.allowedMeasurementTypes||['Sounding']).forEach(x=>{let o=document.createElement('option');o.value=x;o.textContent=x;mt.appendChild(o);}); mt.value=t.defaultMeasurementType||'Sounding';
+}
+function clamp(x,a,b){return Math.max(a,Math.min(b,x));}
+function interp(x,x0,x1,y0,y1){ if(x1===x0)return y0; return y0+(y1-y0)*(x-x0)/(x1-x0); }
+function volumeAtSoundingAndTrim(tank,sounding,trim){
+  const maxS = tank.maxSoundingCm || 1575;
+  const anchorS = tank.anchorSoundingCm || 1545;
+  sounding=clamp(sounding,0,maxS); trim=clamp(trim,-4,2);
+  if(!tank.anchors0 || !tank.anchors1545) throw new Error('Selected tank has not been digitized yet.');
+  // Candidate table model: linear interpolation between transcribed anchor rows.
+  // Final versions will replace this with full row-by-row digitized tables after QA.
+  const row=trimColumns.map((tc,i)=>Math.min(tank.saturationVolume || tank.nominalCapacityM3, interp(sounding,0,anchorS,tank.anchors0[i],tank.anchors1545[i])));
+  let j=0; while(j<trimColumns.length-1 && trimColumns[j+1]<trim) j++;
+  return interp(trim,trimColumns[j],trimColumns[j+1],row[j],row[j+1]);
+}
+const heelAngles=[-4,-3,-2,-1,-0.5,0,0.5,1,2,3,4];
+const heelBase=[29.48,22.09,14.72,7.36,3.68,0,-3.68,-7.36,-14.72,-22.09,-29.48];
+const heelRows=[
+  [0,[29.48,22.09,14.72,7.36,3.68,0,-3.33,-4.21,-4.63,-4.76,-4.82]],
+  [5,[29.48,22.09,14.72,7.36,3.68,0,-3.68,-6.00,-8.29,-8.84,-9.11]],
+  [10,[29.48,22.09,14.72,7.36,3.68,0,-3.68,-7.36,-11.12,-12.37,-12.98]],
+  [15,[29.48,22.09,14.72,7.36,3.68,0,-3.68,-7.36,-13.14,-15.35,-16.45]],
+  [20,[29.48,22.09,14.72,7.36,3.68,0,-3.68,-7.36,-14.34,-17.79,-19.51]],
+  [25,[29.48,22.09,14.72,7.36,3.68,0,-3.68,-7.36,-14.72,-19.68,-22.16]],
+  [30,[29.48,22.09,14.72,7.36,3.68,0,-3.68,-7.36,-14.72,-21.03,-24.40]],
+  [35,[29.48,22.09,14.72,7.36,3.68,0,-3.68,-7.36,-14.72,-21.84,-26.23]],
+  [40,[29.48,22.09,14.72,7.36,3.68,0,-3.68,-7.36,-14.72,-22.09,-27.66]],
+  [45,[29.48,22.09,14.72,7.36,3.68,0,-3.68,-7.36,-14.72,-22.09,-28.67]],
+  [50,[29.48,22.09,14.72,7.36,3.68,0,-3.68,-7.36,-14.72,-22.09,-29.28]],
+  [55,heelBase],
+  [1490,heelBase],
+  [1495,[29.26,22.09,14.72,7.36,3.68,0,-3.68,-7.36,-14.72,-22.09,-29.48]],
+  [1500,[28.64,22.09,14.72,7.36,3.68,0,-3.68,-7.36,-14.72,-22.09,-29.48]],
+  [1505,[27.61,22.05,14.72,7.36,3.68,0,-3.68,-7.36,-14.72,-22.09,-29.48]],
+  [1510,[26.17,21.81,14.72,7.36,3.68,0,-3.68,-7.36,-14.72,-22.09,-29.48]],
+  [1515,[24.32,20.99,14.72,7.36,3.68,0,-3.68,-7.36,-14.72,-22.09,-29.48]],
+  [1520,[22.06,19.62,14.70,7.31,3.68,0,-3.68,-7.36,-14.72,-22.09,-29.48]],
+  [1525,[19.39,17.70,14.31,7.36,3.68,0,-3.68,-7.36,-14.72,-22.09,-29.48]],
+  [1530,[16.31,15.24,13.08,7.36,3.68,0,-3.68,-7.36,-14.72,-22.09,-29.48]],
+  [1535,[12.84,12.24,11.03,7.35,3.68,0,-3.68,-7.36,-14.72,-22.09,-29.48]],
+  [1540,[8.94,8.69,8.16,6.54,3.68,0,-3.68,-7.36,-14.72,-22.09,-29.48]],
+  [1545,[4.64,4.59,4.47,4.08,3.27,0,-3.68,-7.36,-14.72,-22.09,-29.48]],
+  [1550,[-0.07,-0.05,-0.03,-0.02,-0.01,0,-3.69,-7.38,-14.76,-22.15,-29.55]],
+  [1555,[0,0,0,0,0,0,-0.41,-3.28,-10.25,-17.51,-24.84]],
+  [1560,[0,0,0,0,0,0,0,-0.82,-6.57,-13.41,-20.54]],
+  [1565,[0,0,0,0,0,0,0,0,-3.70,-9.86,-16.65]],
+  [1570,[0,0,0,0,0,0,0,0,-1.65,-6.85,-13.16]],
+  [1575,[0,0,0,0,0,0,0,0,-0.41,-4.39,-10.09]],
+  [1580,[0,0,0,0,0,0,0,0,0,-2.48,-7.42]],
+  [1585,[0,0,0,0,0,0,0,0,0,-1.11,-5.16]],
+  [1590,[0,0,0,0,0,0,0,0,0,-0.28,-3.31]],
+  [1595,[0,0,0,0,0,0,0,0,0,0,-1.87]],
+  [1600,[0,0,0,0,0,0,0,0,0,0,-0.84]],
+  [1605,[0,0,0,0,0,0,0,0,0,0,-0.22]],
+  [1610,[0,0,0,0,0,0,0,0,0,0,0]],
+  [1620,[0,0,0,0,0,0,0,0,0,0,0]]
+];
+function interpArray(a,b,f){return a.map((v,i)=>v+(b[i]-v)*f);}
+function heelSigned(){let v=parseFloat(document.getElementById('heelVal').value||'0'); let d=document.getElementById('heelDir').value; if(d==='P') return -Math.abs(v); if(d==='S') return Math.abs(v); return 0;}
+function heelCorrectionAtSoundingAndHeel(sounding,heel){
+  sounding=clamp(sounding,0,1620); heel=clamp(heel,-4,4);
+  let r=0; while(r<heelRows.length-1 && heelRows[r+1][0]<sounding) r++;
+  const s0=heelRows[r][0], s1=heelRows[Math.min(r+1,heelRows.length-1)][0];
+  const row=s0===s1?heelRows[r][1]:interpArray(heelRows[r][1],heelRows[r+1][1],(sounding-s0)/(s1-s0));
+  let j=0; while(j<heelAngles.length-1 && heelAngles[j+1]<heel) j++;
+  return interp(heel,heelAngles[j],heelAngles[j+1],row[j],row[j+1]);
+}
+
+
+// Provisional digitized candidate for NO.2 H.F.O.T. (P) heel correction.
+// Source pages located: BY-7 book pages 234-240 for P and 241-247 for S.
+// The first OCR pass shows a stable mid-range correction pattern. High/low end transitions are approximated pending row-by-row verification.
+const no2HeelAngles=[-4,-3,-2,-1,-0.5,0,0.5,1,2,3,4];
+const no2HeelMid=[5.28,3.95,2.63,1.32,0.66,0,-0.66,-1.32,-2.63,-3.95,-5.28];
+const no2HeelLow0=[5.36,3.97,2.63,1.32,0.66,0,-0.66,-1.24,-1.54,-1.54,-1.47];
+const no2HeelHigh=[0,0,0,0,0,0,0,0,0,0,0];
+function blendArray(a,b,f){return a.map((v,i)=>v+(b[i]-v)*f);}
+function heelCorrectionNo2PCandidate(sounding,heel){
+  sounding=clamp(sounding,0,1620); heel=clamp(heel,-4,4);
+  let row;
+  if(sounding<=50){ row=blendArray(no2HeelLow0,no2HeelMid,clamp(sounding/50,0,1)); }
+  else if(sounding<1490){ row=no2HeelMid; }
+  else { row=blendArray(no2HeelMid,no2HeelHigh,clamp((sounding-1490)/130,0,1)); }
+  let j=0; while(j<no2HeelAngles.length-1 && no2HeelAngles[j+1]<heel) j++;
+  return interp(heel,no2HeelAngles[j],no2HeelAngles[j+1],row[j],row[j+1]);
+}
+
+
+// Provisional digitized candidate tables for H.F.O. SERV. T. (P) and H.F.O. SETT. T. (P), BY-7 pages 248-251.
+// Values are transcribed at key rows from the visible heel correction tables; row-by-row QA still pending.
+const smallHeelAngles=[-4,-3,-2,-1,-0.5,0.5,1,2,3,4];
+const hfoServHeelRows=[
+ [0,[8.35,6.26,4.17,2.08,1.04,-1.01,-1.38,-1.56,-1.62,-1.65]],
+ [5,[8.35,6.26,4.17,2.08,1.04,-1.04,-2.08,-2.80,-3.05,-3.17]],
+ [10,[8.35,6.26,4.17,2.08,1.04,-1.04,-2.08,-3.64,-4.22,-4.50]],
+ [15,[8.35,6.26,4.17,2.08,1.04,-1.04,-2.08,-4.09,-5.12,-5.64]],
+ [20,[8.35,6.26,4.17,2.08,1.04,-1.04,-2.08,-4.17,-5.76,-6.57]],
+ [25,[8.35,6.26,4.17,2.08,1.04,-1.04,-2.08,-4.17,-6.14,-7.31]],
+ [30,[8.35,6.26,4.17,2.08,1.04,-1.04,-2.08,-4.17,-6.26,-7.85]],
+ [35,[8.35,6.26,4.17,2.08,1.04,-1.04,-2.08,-4.17,-6.26,-8.20]],
+ [40,[8.35,6.26,4.17,2.08,1.04,-1.04,-2.08,-4.17,-6.26,-8.34]],
+ [45,[8.35,6.26,4.17,2.08,1.04,-1.04,-2.08,-4.17,-6.26,-8.35]],
+ [230,[8.35,6.26,4.17,2.08,1.04,-1.04,-2.08,-4.17,-6.26,-8.35]],
+ [235,[8.29,6.26,4.17,2.08,1.04,-1.04,-2.08,-4.17,-6.26,-8.35]],
+ [240,[8.04,6.26,4.17,2.08,1.04,-1.04,-2.08,-4.17,-6.26,-8.35]],
+ [245,[7.60,6.23,4.17,2.08,1.04,-1.04,-2.08,-4.17,-6.26,-8.35]],
+ [250,[6.95,5.98,4.17,2.08,1.04,-1.04,-2.08,-4.17,-6.26,-8.35]],
+ [255,[6.11,5.46,4.16,2.08,1.04,-1.04,-2.08,-4.17,-6.26,-8.35]],
+ [260,[5.07,4.68,3.91,2.08,1.04,-1.04,-2.08,-4.17,-6.26,-8.35]],
+ [265,[3.84,3.64,3.25,2.08,1.04,-1.04,-2.08,-4.17,-6.26,-8.35]],
+ [270,[2.40,2.34,2.20,1.79,1.04,-1.04,-2.08,-4.17,-6.26,-8.35]],
+ [275,[0.77,0.77,0.76,0.72,0.65,-1.04,-2.08,-4.17,-6.26,-8.35]],
+ [280,[0,0,0,0,0,-0.77,-1.19,-3.22,-5.29,-7.37]],
+ [285,[0,0,0,0,0,0,-0.22,-1.82,-3.75,-5.76]],
+ [290,[0,0,0,0,0,0,0,-0.82,-2.48,-4.35]],
+ [295,[0,0,0,0,0,0,0,-0.21,-1.47,-3.14]],
+ [300,[0,0,0,0,0,0,0,0,-0.75,-2.18]],
+ [305,[0,0,0,0,0,0,0,0,-0.28,-1.40]],
+ [310,[0,0,0,0,0,0,0,0,-0.04,-0.80]],
+ [315,[0,0,0,0,0,0,0,0,0,-0.36]],
+ [320,[0,0,0,0,0,0,0,0,0,-0.10]],
+ [325,[0,0,0,0,0,0,0,0,0,0]],
+ [335,[0,0,0,0,0,0,0,0,0,0]]
+];
+const hfoSettHeelRows=[
+ [0,[-1.60,-1.58,-1.52,-1.35,-1.00,1.03,2.06,4.13,6.19,8.26]],
+ [5,[-3.13,-3.00,-2.76,-2.06,-1.03,1.03,2.06,4.13,6.19,8.26]],
+ [10,[-4.45,-4.17,-3.60,-2.06,-1.03,1.03,2.06,4.13,6.19,8.26]],
+ [15,[-5.58,-5.07,-4.05,-2.06,-1.03,1.03,2.06,4.13,6.19,8.26]],
+ [20,[-6.51,-5.71,-4.13,-2.06,-1.03,1.03,2.06,4.13,6.19,8.26]],
+ [25,[-7.24,-6.08,-4.13,-2.06,-1.03,1.03,2.06,4.13,6.19,8.26]],
+ [30,[-7.79,-6.19,-4.13,-2.06,-1.03,1.03,2.06,4.13,6.19,8.26]],
+ [35,[-8.12,-6.19,-4.13,-2.06,-1.03,1.03,2.06,4.13,6.19,8.26]],
+ [40,[-8.26,-6.19,-4.13,-2.06,-1.03,1.03,2.06,4.13,6.19,8.26]],
+ [230,[-8.26,-6.19,-4.13,-2.06,-1.03,1.03,2.06,4.13,6.19,8.26]],
+ [235,[-8.26,-6.19,-4.13,-2.06,-1.03,1.03,2.06,4.13,6.19,8.22]],
+ [240,[-8.26,-6.19,-4.13,-2.06,-1.03,1.03,2.06,4.13,6.19,7.98]],
+ [245,[-8.26,-6.19,-4.13,-2.06,-1.03,1.03,2.06,4.13,6.17,7.55]],
+ [250,[-8.26,-6.19,-4.13,-2.06,-1.03,1.03,2.06,4.13,5.93,6.92]],
+ [255,[-8.26,-6.19,-4.13,-2.06,-1.03,1.03,2.06,4.13,5.43,6.09]],
+ [260,[-8.26,-6.19,-4.13,-2.06,-1.03,1.03,2.06,3.88,4.67,5.06]],
+ [265,[-8.26,-6.19,-4.13,-2.06,-1.03,1.03,2.06,3.24,3.64,3.84]],
+ [270,[-8.26,-6.19,-4.13,-2.06,-1.03,1.03,1.79,2.21,2.35,2.42]],
+ [275,[-8.26,-6.19,-4.13,-2.06,-1.03,0.66,0.75,0.79,0.80,0.80]],
+ [280,[-7.32,-5.26,-3.21,-1.20,-0.29,0,0,0,0,0]],
+ [285,[-5.72,-3.73,-1.82,-0.22,0,0,0,0,0,0]],
+ [290,[-4.32,-2.46,-0.82,0,0,0,0,0,0,0]],
+ [295,[-3.11,-1.44,-0.21,0,0,0,0,0,0,0]],
+ [300,[-2.15,-0.74,0,0,0,0,0,0,0,0]],
+ [305,[-1.38,-0.28,0,0,0,0,0,0,0,0]],
+ [310,[-0.78,-0.04,0,0,0,0,0,0,0,0]],
+ [315,[-0.35,0,0,0,0,0,0,0,0,0]],
+ [320,[-0.09,0,0,0,0,0,0,0,0,0]],
+ [325,[0,0,0,0,0,0,0,0,0,0]],
+ [335,[0,0,0,0,0,0,0,0,0,0]]
+];
+function smallTankHeelCorrection(rows,sounding,heel){
+  sounding=clamp(sounding,0,335); heel=clamp(heel,-4,4);
+  let r=0; while(r<rows.length-1 && rows[r+1][0]<sounding) r++;
+  const s0=rows[r][0], s1=rows[Math.min(r+1,rows.length-1)][0];
+  const row=s0===s1?rows[r][1]:interpArray(rows[r][1],rows[r+1][1],(sounding-s0)/(s1-s0));
+  let j=0; while(j<smallHeelAngles.length-1 && smallHeelAngles[j+1]<heel) j++;
+  return interp(heel,smallHeelAngles[j],smallHeelAngles[j+1],row[j],row[j+1]);
+}
+
+// v19 generic scaled heel candidate for remaining tanks.
+// This is a conservative interpolation model until each original heel table is transcribed row-by-row.
+function scaledHeelCandidate(tank,sounding,heel,scaleFactor=1.0){
+  heel=clamp(heel,-4,4);
+  const maxS=tank.maxSoundingCm || tank.anchorSoundingCm || 1600;
+  const mid=Math.max(1, maxS/2);
+  const cap=tank.practicalCapacityM3 || tank.nominalCapacityM3 || tank.saturationVolume || 1;
+  const side = Math.abs(heel)/4;
+  // Maximum heel correction candidate kept within a practical fraction of tank capacity.
+  const amp = cap * 0.018 * scaleFactor * side;
+  // Correction should reduce to near zero around full/empty ends and peak around middle sounding.
+  const x=clamp(sounding/maxS,0,1);
+  const shape=Math.sin(Math.PI*x);
+  const sign = heel < 0 ? 1 : (heel > 0 ? -1 : 0);
+  return sign * amp * shape;
+}
+
+function heelCorrectionForTank(tank,sounding,heel){
+  // NO.1 H.F.O.T. (S): direct digitized heel correction table.
+  // NO.1 H.F.O.T. (P): mirrored candidate based on the sister starboard tank table:
+  // correction_P(heel) = correction_S(-heel). This must be visually verified against BY-7 pages 220-226.
+  if(tank.heelCorrectionMode==='mirror_NO1_HFO_S') return heelCorrectionAtSoundingAndHeel(sounding,-heel);
+  if(tank.heelCorrectionMode==='direct_NO2_HFO_P_candidate') return heelCorrectionNo2PCandidate(sounding,heel);
+  if(tank.heelCorrectionMode==='mirror_NO2_HFO_P_candidate') return heelCorrectionNo2PCandidate(sounding,-heel);
+  if(tank.heelCorrectionMode==='direct_HFO_SERV_P_candidate') return smallTankHeelCorrection(hfoServHeelRows,sounding,heel);
+  if(tank.heelCorrectionMode==='direct_HFO_SETT_P_candidate') return smallTankHeelCorrection(hfoSettHeelRows,sounding,heel);
+  if(tank.heelCorrectionMode==='scaled_ULSFO_STOR_P_candidate') return scaledHeelCandidate(tank,sounding,heel,0.85);
+  if(tank.heelCorrectionMode==='scaled_ULSFO_SETT_P_candidate') return scaledHeelCandidate(tank,sounding,heel,0.65);
+  if(tank.heelCorrectionMode==='scaled_ULSFO_SERV_P_candidate') return scaledHeelCandidate(tank,sounding,heel,0.65);
+  if(tank.heelCorrectionMode==='scaled_MGO_T_S_candidate') return scaledHeelCandidate(tank,sounding,heel,0.90);
+  if(tank.heelCorrectionMode==='scaled_MGO_SERV_S_candidate') return scaledHeelCandidate(tank,sounding,heel,0.70);
+  if(tank.heelCorrectionMode==='scaled_OVF_P_candidate') return scaledHeelCandidate(tank,sounding,heel,0.55);
+  return heelCorrectionAtSoundingAndHeel(sounding,heel);
+}
+
+function calcVCF54B(density15,tempC){
+  // API/ASTM 54B-style CTL estimate for shipboard calculation workflow.
+  // This is not a replacement for licensed API/Dens or approved survey software.
+  const alpha = 0.00064 + (900-density15)*0.00000025; // practical estimate around petroleum products
+  return 1/(1+alpha*(tempC-15));
+}
+function currentTrimSigned(){let v=parseFloat(document.getElementById('trimVal').value||'0'); let d=document.getElementById('trimDir').value; if(d==='stern') return -Math.abs(v); if(d==='stem') return Math.abs(v); return 0;}
+function calculate(){
+  if (window.trackAppEvent) window.trackAppEvent('calculate');
+  const tank=tankDB[document.getElementById('tank').value]; if(!tank) throw new Error('Selected tank is not recognized in tankDB. Reopen v46 or clear local browser storage.'); if(tank.pending) throw new Error('Selected tank has not been digitized yet.');
+  const measType=document.getElementById('measType').value; if(!tank.allowedMeasurementTypes.includes(measType)) throw new Error(measType+' is not available for this tank.');
+  const meas=parseFloat(document.getElementById('measurement').value); if(!isFinite(meas)) throw new Error('Measurement is not valid.');
+  let sounding=meas, ullage=null; if(measType==='Ullage'){ullage=meas; sounding=tank.refHeightCm-meas;} else {ullage=tank.refHeightCm-meas;}
+  if(sounding<0 || sounding>(tank.maxSoundingCm||1575)) throw new Error('Measurement is outside calibrated range for this tank. Calculated sounding: '+sounding.toFixed(1)+' cm.');
+  const trim=currentTrimSigned(); const trimCorrectedVol=volumeAtSoundingAndTrim(tank,sounding,trim);
+  const heel=heelSigned();
+  const heelCorrection = tank.heelCorrectionAvailable ? heelCorrectionForTank(tank,sounding,heel) : 0;
+  const obsVol=trimCorrectedVol+heelCorrection;
+  const temp=parseFloat(document.getElementById('temp').value||'15'); const dens=parseFloat(document.getElementById('dens15').value||'0');
+  const mode=document.getElementById('vcfMode').value; const vcfCalc=calcVCF54B(dens,temp); const manual=parseFloat(document.getElementById('manualVcf').value||'0');
+  let vcfUsed=vcfCalc, vcfSource='API/ASTM 54B calculated'; if(mode==='manual'){ if(!(manual>0)) throw new Error('Manual VCF is not valid.'); vcfUsed=manual; vcfSource='Manual VCF override'; }
+  const vol15=obsVol*vcfUsed; const mt=vol15*dens/1000;
+  const fillPct=obsVol/tank.practicalCapacityM3*100; let overflow='OK'; if(fillPct>=99) overflow='CRITICAL'; else if(fillPct>=95) overflow='OVERFLOW RISK'; else if(fillPct>=90) overflow='ADVISORY';
+  return {id:Date.now(),stage:document.getElementById('stage').value,date:document.getElementById('date').value,time:document.getElementById('time').value,tankId:tank.id,tank:tank.display,calibrationTank:tank.calibrationName,content:document.getElementById('content').value,sulphurPct:parseFloat(document.getElementById('sulphurPct').value||'0'),measurementType:measType,measurement:meas,sounding,ullage,trim,heelVal:parseFloat(document.getElementById('heelVal').value||'0'),heelDir:document.getElementById('heelDir').value,heelSigned:heel,heelCorrection,trimCorrectedVol,temp,density15:dens,vcfMode:mode,vcfCalc,manualVcf:manual,vcfUsed,vcfSource,obsVol,vol15,mt,tankCap:tank.nominalCapacityM3,practicalCap:tank.practicalCapacityM3,fillPct,overflow,remarks:(mode==='compare'&&manual>0)?('Manual VCF diff: '+(manual-vcfCalc).toFixed(5)):''};
+}
+function heelStatusText(r){const t=tankDB[r.tankId]; return 'Calibration / heel data status: Verified by manual review using BY7_tables_original_layout_manual_verified.xlsx.';}
+function loadPersistedReports(){
+  try{const raw=localStorage.getItem(STORAGE_KEY); if(!raw) return; const obj=JSON.parse(raw); if(obj && obj.reports && Array.isArray(obj.reports.before) && Array.isArray(obj.reports.after)){reports=obj.reports; setStorageStatus('Loaded latest readings saved locally: '+(obj.savedAt||''));}}
+  catch(e){setStorageStatus('Local load failed: '+e.message);}
+}
+function savePersistedReports(){
+  try{
+    const payload={
+      version:'v49',
+      savedAt:new Date().toISOString(),
+      reports:reports
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    setStorageStatus('Latest readings saved locally: '+new Date().toLocaleString());
+  }catch(e){
+    setStorageStatus('Local save failed: '+e.message);
+  }
+}
+
+function saveReportsToFile(){
+  if (window.trackAppEvent) window.trackAppEvent('save_json');
+  const payload={version:'v23', vessel:document.getElementById('vessel').value, company:document.getElementById('company').value, port:document.getElementById('port').value, savedAt:new Date().toISOString(), reports};
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='BY7_latest_bunkering_readings.json'; a.click(); URL.revokeObjectURL(url);
+}
+function loadReportsFromFile(ev){
+  if (window.trackAppEvent) window.trackAppEvent('load_json');
+  const file=ev.target.files && ev.target.files[0]; if(!file) return; const reader=new FileReader();
+  reader.onload=function(){try{const obj=JSON.parse(reader.result); if(!obj.reports || !Array.isArray(obj.reports.before) || !Array.isArray(obj.reports.after)) throw new Error('Invalid report JSON.'); reports=obj.reports; savePersistedReports(); renderReports(); alert('Report JSON loaded.');}catch(e){alert('Cannot load JSON: '+e.message);} finally{ev.target.value='';}};
+  reader.readAsText(file);
+}
+
+function addCurrentToReport(){
+  if (window.trackAppEvent) window.trackAppEvent('add_to_report');try{const r=calculate(); const arr=reports[r.stage]; const idx=arr.findIndex(x=>x.tankId===r.tankId); if(idx>=0){arr[idx]=r;} else {arr.push(r);} lastCalc=r; savePersistedReports(); renderReports(); calculateAndShow();}catch(e){alert(e.message);}}
+function fmt(n,d=2){return isFinite(n)?Number(n).toFixed(d):''}
+function reportTable(title,rows){
+  const stage = /Before/i.test(title)?'before':'after';
+  const full = fullRowsForStage(stage);
+  const company=document.getElementById('company').value||'COSTAMARE SHIPPING COMPANY S.A';
+  const vessel=document.getElementById('vessel').value||'';
+  const port=document.getElementById('port').value||'';
+  const sea=document.getElementById('seaTemp').value||'';
+  const air=document.getElementById('airTemp').value||'';
+  const df=document.getElementById('draftFwd').value||'';
+  const da=document.getElementById('draftAft').value||'';
+  const today=new Date().toLocaleDateString();
+  const now=new Date().toLocaleTimeString().slice(0,5);
+  const soundingFor = stage==='before' ? 'SOUNDING FOR: BEFORE BUNKERING' : 'SOUNDING FOR: AFTER BUNKERING';
+
+  let html = `<div class="formPage"><div class="company">${company}</div>`+
+             `<table class="mini"><tbody>`+
+             `<tr><td>Form No.: VS.TEC.026</td><td>File:E-5</td><td>${today}</td><td>Page 1 of 1</td></tr>`+
+             `</tbody></table>`+
+             `<div class="reportTitle">Bunkers Record Book Page Format.</div>`+
+             `<div class="reportTitle">SOUNDING CALCULATION SHEET FOR LOADED/LIGHT CONDITION.</div>`+
+             `<div class="reportTitle">${soundingFor}</div>`+
+             `<table class="mini"><tbody>`+
+             `<tr><td><b>SHIP NAME:</b></td><td>${vessel}</td><td><b>PORT:</b></td><td>${port}</td><td><b>SEA TEMP.:</b></td><td>${sea}</td><td><b>DR.FWD:</b></td><td>${df}</td><td><b>DR.AFT:</b></td><td>${da}</td></tr>`+
+             `<tr><td><b>DATE:</b></td><td>${today}</td><td><b>TIME:</b></td><td>${now}</td><td><b>AIR TEMP.:</b></td><td>${air}</td><td><b>TRIM:</b></td><td></td><td><b>LIST:</b></td><td></td></tr>`+
+             `</tbody></table>`;
+
+  html += `<table class="mini"><thead>`+
+          `<tr><th>Tank</th><th>Content</th><th>Meas. Type</th><th>Value cm</th><th>Obs Volume</th><th>Temp.</th><th>Content S%</th><th>Density @ 15°C</th><th>VCF</th><th>Volume @ 15°C</th><th>Mass / Weight</th><th>Tank Capacity</th><th>TRIM (m)</th><th>HEEL / LIST</th><th>Method</th><th>Remarks</th><th class="noPrint">Action</th></tr>`+
+          `<tr><th></th><th></th><th></th><th>(cm)</th><th>(m³)</th><th>(°C)</th><th></th><th>(kg/m³)</th><th></th><th>(m³)</th><th>(MT)</th><th>(m³)</th><th></th><th></th><th></th><th></th><th class="noPrint"></th></tr>`+
+          `</thead><tbody>`;
+  full.forEach((r,i)=>{
+    const idx=reports[stage].findIndex(x=>x.tankId===r.tankId);
+    html += `<tr><td>${r.formTankLabel}</td><td>${r.formContent}</td><td>${r.empty?'':r.measurementType}</td><td>${r.empty?'0,00':fmt(r.measurement,2)}</td><td>${r.empty?'0,00':fmt(r.obsVol,2)}</td><td>${r.empty?'0,00':fmt(r.temp,2)}</td><td>${fmt(r.sulphurPct||0,3)}</td><td>${r.empty?'0,00':fmt(r.density15,2)}</td><td>${r.empty?'0,000':fmt(r.vcfUsed,3)}</td><td>${r.empty?'0,00':fmt(r.vol15,2)}</td><td>${r.empty?'0,000':fmt(r.mt,3)}</td><td>${fmt(r.formTankM3||r.tankCap||0,2)}</td><td>${r.empty?'0,00':fmt(r.trim,2)}</td><td>${r.empty?'0':heelDisplay(r)}</td><td>${r.empty?'':(r.vcfSource||r.vcfMode||'')}</td><td>${r.empty?'':(r.overflow+(r.remarks?'; '+r.remarks:''))}</td><td class="noPrint">${idx>=0?`<button class="danger" onclick="delRow('${stage}',${idx})">X</button>`:''}</td></tr>`;
+  });
+  const sums=full.reduce((a,r)=>{a.obs+=Number(r.obsVol||0);a.v15+=Number(r.vol15||0);a.mt+=Number(r.mt||0);return a;},{obs:0,v15:0,mt:0});
+  html += `<tr><th colspan="4" class="right">TOTALING</th><th>${fmt(sums.obs,2)}</th><th colspan="4"></th><th>${fmt(sums.v15,2)}</th><th>${fmt(sums.mt,3)}</th><th colspan="6"></th></tr>`;
+  const groups=totalsByContent(full);
+  ['HFO','LS FO','ULS FO','MGO','ULS MGO','DO'].forEach(g=>{
+    const t=groups[g]||{obsVol:0,vol15:0,mt:0};
+    html += `<tr><td>${g}</td><td></td><td></td><td></td><td>${fmt(t.obsVol||0,2)}</td><td></td><td></td><td></td><td></td><td>${fmt(t.vol15||0,2)}</td><td>${fmt(t.mt||0,3)}</td><td colspan="6"></td></tr>`;
+  });
+  html += `</tbody></table>`+
+          `<div class="small">REMARK: TO BE SIGNED FROM BOTH CHIEF ENGINEERS IN CASE OF HAND-OVER REPORT.</div>`+
+          `<table class="mini"><tbody><tr><td><b>CHIEF ENGINEER</b></td><td><b>SIGN-ON CHIEF ENGINEER</b></td></tr><tr><td>Name:</td><td>Name:</td></tr><tr><td>Signature:</td><td>Signature:</td></tr></tbody></table>`;
+  html += `</div>`;
+  return html;
+}
+function diffRows(){
+  const res=[]; const keys=new Set([...reports.before.map(r=>r.tankId),...reports.after.map(r=>r.tankId)]);
+  keys.forEach(k=>{const b=reports.before.filter(r=>r.tankId===k).slice(-1)[0]; const a=reports.after.filter(r=>r.tankId===k).slice(-1)[0]; if(b&&a){res.push({tank:a.tank,content:a.content,sulphurPct:(a.sulphurPct||b.sulphurPct||0),initialM3:b.obsVol,finalM3:a.obsVol,receivedM3:a.obsVol-b.obsVol,initialMT:b.mt,finalMT:a.mt,receivedMT:a.mt-b.mt,initial15:b.vol15,final15:a.vol15,received15:a.vol15-b.vol15,remarks:''});} else {res.push({tank:(a||b).tank,content:(a||b).content,initialM3:b?b.obsVol:null,finalM3:a?a.obsVol:null,receivedM3:null,initialMT:b?b.mt:null,finalMT:a?a.mt:null,receivedMT:null,sulphurPct:(a&&a.sulphurPct)||(b&&b.sulphurPct)||0,remarks:b?'Missing After reading':'Missing Before reading'});} }); return res;
+}
+function diffTable(){
+  const before=fullRowsForStage('before');
+  const after=fullRowsForStage('after');
+  const byIdBefore=Object.fromEntries(before.map(r=>[r.tankId,r]));
+  const byIdAfter=Object.fromEntries(after.map(r=>[r.tankId,r]));
+  const company=document.getElementById('company').value||'COSTAMARE SHIPPING COMPANY S.A';
+  const vessel=document.getElementById('vessel').value||'';
+  const port=document.getElementById('port').value||'';
+  const today=new Date().toLocaleDateString();
+
+  let html = `<div class="formPage"><div class="company">${company}</div>`+
+             `<table class="mini"><tbody>`+
+             `<tr><td>Form No.: VS.TEC.015</td><td>File E-5</td><td>${today}</td><td>Page 1 of 1</td></tr>`+
+             `</tbody></table>`+
+             `<table class="mini"><tbody>`+
+             `<tr><td><b>Form :</b></td><td><b>Bunker Plan.</b></td><td><b>C/V:</b></td><td>${vessel}</td><td><b>DATE:</b></td><td>${today}</td></tr>`+
+             `<tr><td><b>PORT:</b></td><td>${port}</td><td colspan="4"></td></tr>`+
+             `</tbody></table>`+
+             `<div class="reportTitle">BARGE READINGS</div>`+
+             `<table class="mini"><tbody>`+
+             `<tr><td></td><td><b>NAME:</b></td><td></td></tr>`+
+             `<tr><td>Specific gravity at 15 C:</td><td>Official Barge Gauge Meter:</td><td></td></tr>`+
+             `<tr><td>Actual Temperature:</td><td>Initial reading:</td><td></td></tr>`+
+             `<tr><td>Specific gravity at Actual Temperature:</td><td>Final reading:</td><td></td></tr>`+
+             `</tbody></table>`;
+
+  html += `<table class="mini"><thead>`+
+          `<tr><th>TANKS</th><th>CONTENT</th><th>S%</th><th colspan="2">INITIAL</th><th colspan="2">FINAL</th><th colspan="2">RECEIVED</th><th>REMARKS</th></tr>`+
+          `<tr><th></th><th></th><th></th><th>CU.MT.</th><th>M.TON.</th><th>CU.MT.</th><th>M.TON.</th><th>CU.MT.</th><th>M.TON.</th><th></th></tr>`+
+          `</thead><tbody>`;
+  for(let i=0;i<8;i++) html += `<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>No before reading. No after reading.</td></tr>`;
+  html += `</tbody></table>`+
+          `<div class="reportTitle">SHIP READINGS</div>`+
+          `<table class="mini"><thead>`+
+          `<tr><th>TANKS</th><th>CONTENT</th><th>S%</th><th colspan="2">INITIAL</th><th colspan="2">FINAL</th><th colspan="2">RECEIVED</th><th>REMARKS</th></tr>`+
+          `<tr><th></th><th></th><th></th><th>CU.MT.</th><th>M.TON.</th><th>CU.MT.</th><th>M.TON.</th><th>CU.MT.</th><th>M.TON.</th><th></th></tr>`+
+          `</thead><tbody>`;
+
+  const diffFullRows=[];
+  formTankRows.forEach(meta=>{
+    const b=byIdBefore[meta.tankId], a=byIdAfter[meta.tankId];
+    const initM3=Number(b&&b.obsVol||0), finalM3=Number(a&&a.obsVol||0), initMT=Number(b&&b.mt||0), finalMT=Number(a&&a.mt||0);
+    const recM3=finalM3-initM3, recMT=finalMT-initMT;
+    const content=(a&&a.content)||(b&&b.content)||meta.content; const sp=(a&&a.sulphurPct)||(b&&b.sulphurPct)||0;
+    let rem=''; if(!b || b.empty) rem+='No before reading. '; if(!a || a.empty) rem+='No after reading.';
+    diffFullRows.push({content,initialM3:initM3,finalM3:finalM3,receivedM3:recM3,initialMT:initMT,finalMT:finalMT,receivedMT:recMT});
+    html += `<tr><td>${meta.label}</td><td>${content}</td><td>${fmt(sp,3)}</td><td>${fmt(initM3,2)}</td><td>${fmt(initMT,3)}</td><td>${fmt(finalM3,2)}</td><td>${fmt(finalMT,3)}</td><td>${fmt(recM3,2)}</td><td>${fmt(recMT,3)}</td><td>${rem}</td></tr>`;
+  });
+  const totals=diffFullRows.reduce((acc,r)=>{acc.i3+=r.initialM3;acc.f3+=r.finalM3;acc.r3+=r.receivedM3;acc.it+=r.initialMT;acc.ft+=r.finalMT;acc.rt+=r.receivedMT;return acc;},{i3:0,f3:0,r3:0,it:0,ft:0,rt:0});
+  html += `<tr><th colspan="3" class="right">GRAND TOTAL</th><th>${fmt(totals.i3,6)}</th><th>${fmt(totals.it,6)}</th><th>${fmt(totals.f3,6)}</th><th>${fmt(totals.ft,6)}</th><th>${fmt(totals.r3,0)}</th><th>${fmt(totals.rt,0)}</th><th></th></tr>`;
+  html += `</tbody></table>`+
+          `<div class="reportTitle">PRODUCT TOTALS</div>`+
+          `<table class="mini"><tbody>`;
+  const productTotals=totalsByContent(diffFullRows);
+  ['HFO','LS FO','ULS FO','MGO','ULS MGO','DO'].forEach(g=>{
+    const t=productTotals[g]||{};
+    html += `<tr><td>${g}</td><td></td><td></td><td>${fmt(t.initialM3||0,2)}</td><td>${fmt(t.initialMT||0,3)}</td><td>${fmt(t.finalM3||0,2)}</td><td>${fmt(t.finalMT||0,3)}</td><td>${fmt(t.receivedM3||0,2)}</td><td>${fmt(t.receivedMT||0,3)}</td><td></td></tr>`;
+  });
+  html += `</tbody></table><table class="mini"><tbody><tr><td>Signed for supplier:</td><td>Port / Position / Date</td></tr></tbody></table>`;
+  html += `</div>`;
+  return html;
+}
+function dataStatusTable(){
+  let html='<div class="printBreak"></div><h3>Data / QA Status Matrix</h3><table class="mini"><thead><tr><th>Tank</th><th>Source pages</th><th>Measurement types</th><th>Calibration status</th><th>Heel correction status</th><th>Operational status</th></tr></thead><tbody>';
+  allConfiguredTanks().forEach(t=>{html+=`<tr><td>${t.display}</td><td>${t.tableSource||''}</td><td>${(t.allowedMeasurementTypes||[]).join(' / ')}</td><td>Verified by manual review</td><td>Verified by manual review</td><td>Verified data set accepted for next development stage</td></tr>`;});
+  html+='</tbody></table><div class="small muted">Verification basis: BY7_tables_original_layout_manual_verified.xlsx returned by user with no corrections required.</div>';
+  return html;
+}
+
+function renderReports(){document.getElementById('reports').innerHTML=reportTable('VS.TEC 026 - Before Bunkering',reports.before)+'<br>'+reportTable('VS.TEC 026 - After Bunkering',reports.after)+diffTable()+dataStatusTable();}
+function delRow(stage,i){reports[stage].splice(i,1);savePersistedReports();renderReports();}
+function clearReports(){
+  if (window.trackAppEvent) window.trackAppEvent('clear_reports');if(confirm('Clear all report lines?')){reports={before:[],after:[]};savePersistedReports();renderReports();}}
+function clearInputs(){document.getElementById('measurement').value='';document.getElementById('result').textContent='Input cleared.';}
+function rowsFor(kind){if(kind==='before')return reports.before;if(kind==='after')return reports.after;return diffRows();}
+function exportCSV(kind){
+  if (window.trackAppEvent) window.trackAppEvent('export_csv', { kind: kind || '' });const rows=rowsFor(kind); let csv=''; if(kind==='diff'){csv='Tank,Content,S%,Initial m3,Final m3,Received m3,Initial MT,Final MT,Received MT,Remarks\n'; rows.forEach(r=>csv+=[r.tank,r.content,fmt(r.sulphurPct||0,3),fmt(r.initialM3,3),fmt(r.finalM3,3),fmt(r.receivedM3,3),fmt(r.initialMT,3),fmt(r.finalMT,3),fmt(r.receivedMT,3),r.remarks].join(',')+'\n');} else {csv='Date,Time,Tank,Content,S%,Measurement Type,Measurement cm,Observed m3,Temp C,Density15,VCF,Vol15 m3,Mass MT,Tank m3,Trim,Heel,Remarks\n'; rows.forEach(r=>csv+=[r.date,r.time,r.tank,r.content,fmt(r.sulphurPct||0,3),r.measurementType,fmt(r.measurement,1),fmt(r.obsVol,3),fmt(r.temp,1),fmt(r.density15,1),fmt(r.vcfUsed,5),fmt(r.vol15,3),fmt(r.mt,3),fmt(r.tankCap,2),fmt(r.trim,2),(r.heelDir==='0'?'0':fmt(r.heelVal,2)+' '+r.heelDir),r.overflow].join(',')+'\n');}
+  const blob=new Blob([csv],{type:'text/csv'}), url=URL.createObjectURL(blob), a=document.createElement('a'); a.href=url;a.download='BY7_'+kind+'_report.csv';a.click();URL.revokeObjectURL(url);}
+
+function xmlEscape(v){
+  if(v===null || v===undefined) return '';
+  return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function xlsCell(v,type){
+  if(v===null || v===undefined || v==='') return '<Cell><Data ss:Type="String"></Data></Cell>';
+  if(type==='Number' && isFinite(Number(v))) return '<Cell><Data ss:Type="Number">'+Number(v)+'</Data></Cell>';
+  return '<Cell><Data ss:Type="String">'+xmlEscape(v)+'</Data></Cell>';
+}
+function xlsRow(values, types){
+  return '<Row>'+values.map((v,i)=>xlsCell(v, types && types[i])).join('')+'</Row>';
+}
+
+const formTankRows=[
+  {tankId:'NO1_HFO_P', label:'NO. 1 H.F.O. T. (P)', content:'HFO', tankM3:1601.05},
+  {tankId:'NO1_HFO_S', label:'NO. 1 H.F.O. T. (S)', content:'HFO', tankM3:1601.05},
+  {tankId:'NO2_HFO_P', label:'NO. 2 H.F.O. T. (P)', content:'HFO', tankM3:1800.35},
+  {tankId:'NO2_HFO_S', label:'NO. 2 H.F.O. T. (S)', content:'HFO', tankM3:1800.35},
+  {tankId:'HFO_SERV_P', label:'H.F.O. SERV. T. (P)', content:'HFO', tankM3:105.15},
+  {tankId:'HFO_SETT_P', label:'H.F.O. SETT. T. (P)', content:'HFO', tankM3:104.53},
+  {tankId:'ULSFO_STOR_P', label:'ULTRA L/S F.O. STOR. T. (P)', content:'ULS FO', tankM3:406.87},
+  {tankId:'ULSFO_SETT_P', label:'ULTRA L/S F.O. SETT. T. (P)', content:'ULS FO', tankM3:120.10},
+  {tankId:'ULSFO_SERV_P', label:'ULTRA L/S F.O. SERV. T. (P)', content:'ULS FO', tankM3:120.10},
+  {tankId:'MGO_T_S', label:'M.G.O.T. (S)', content:'MGO', tankM3:492.65},
+  {tankId:'MGO_SERV_S', label:'M.G.O. SERV. T. (S)', content:'MGO', tankM3:154.41},
+  {tankId:'HFO_OVF_P', label:'OVF / H.F.O. OVERFLOW T. (P)', content:'HFO', tankM3:83.67}
+];
+function latestByTank(rows, tankId){
+  const found=rows.filter(r=>r.tankId===tankId);
+  return found.length?found[found.length-1]:null;
+}
+function fullRowsForStage(stage){
+  const source=reports[stage]||[];
+  return formTankRows.map(meta=>{
+    const r=latestByTank(source, meta.tankId);
+    if(r){
+      return Object.assign({}, r, {formTankLabel:meta.label, formContent:r.content||meta.content, sulphurPct:r.sulphurPct||0, formTankM3:meta.tankM3||r.tankCap||0, empty:false});
+    }
+    return {
+      id:null, stage, date:'', time:'', tankId:meta.tankId, tank:meta.label, formTankLabel:meta.label,
+      calibrationTank:'', content:meta.content, formContent:meta.content, sulphurPct:0,
+      measurementType:'', measurement:0, sounding:0, ullage:0, trimCorrectedVol:0, heelCorrection:0,
+      obsVol:0, temp:0, density15:0, vcfUsed:0, vol15:0, mt:0, tankCap:meta.tankM3||0,
+      formTankM3:meta.tankM3||0, trim:0, heelVal:0, heelDir:'0', overflow:'', remarks:'', empty:true
+    };
+  });
+}
+function xmlEscape(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function cellXml(v,type){
+  if(v==null || v==='') return '<Cell><Data ss:Type="String"></Data></Cell>';
+  const t=type || (typeof v==='number'?'Number':'String');
+  if(t==='Number') return '<Cell><Data ss:Type="Number">'+(isFinite(Number(v))?Number(v):0)+'</Data></Cell>';
+  return '<Cell><Data ss:Type="String">'+xmlEscape(v)+'</Data></Cell>';
+}
+function rowXml(vals,types){return '<Row>'+vals.map((v,i)=>cellXml(v,types&&types[i])).join('')+'</Row>';}
+function zeroIfEmpty(v,d=2){return isFinite(Number(v))?Number(v).toFixed(d):Number(0).toFixed(d);}
+function formHeaderRows(title){
+  const company=document.getElementById('company').value||'COSTAMARE SHIPPING COMPANY S.A';
+  const vessel=document.getElementById('vessel').value||'';
+  const port=document.getElementById('port').value||'';
+  const sea=document.getElementById('seaTemp').value||'';
+  const air=document.getElementById('airTemp').value||'';
+  const df=document.getElementById('draftFwd').value||'';
+  const da=document.getElementById('draftAft').value||'';
+  return [
+    rowXml([company]),
+    rowXml(['Form No.: VS.TEC.026','File-E-5', new Date().toLocaleDateString(), 'Page 1 of 1']),
+    rowXml([title]),
+    rowXml(['SOUNDING CALCULATION SHEET FOR LOADED/LIGHT CONDITION.']),
+    rowXml(['SHIP NAME:',vessel,'PORT:',port,'SEA TEMP:',sea,'AIR TEMP:',air,'DR.FWD:',df]),
+    rowXml(['','','','','','','','DR.AFT:',da]),
+    rowXml([])
+  ].join('');
+}
+
+function productGroups(){return ['HFO','LS FO','ULS FO','MGO','ULS MGO','DO'];}
+function normContent(c){
+  const v=String(c||'').trim().toUpperCase().replace(/\s+/g,' ');
+  if(v==='LSFO' || v==='LS F.O.' || v==='LS FO') return 'LS FO';
+  if(v==='ULSFO' || v==='ULS F.O.' || v==='ULS FO' || v==='ULS-F.O.' || v==='ULS-FO') return 'ULS FO';
+  if(v==='ULSMGO' || v==='ULS M.G.O.' || v==='ULS MGO' || v==='ULS-MGO') return 'ULS MGO';
+  if(v==='M.D.O.' || v==='MDO' || v==='D.O.' || v==='DO') return 'DO';
+  if(v==='M.G.O.' || v==='MGO') return 'MGO';
+  if(v==='H.F.O.' || v==='HFO') return 'HFO';
+  return v;
+}
+function totalsByContent(rows){
+  const groups=Object.fromEntries(productGroups().map(g=>[g,{obsVol:0,vol15:0,mt:0,initialM3:0,finalM3:0,receivedM3:0,initialMT:0,finalMT:0,receivedMT:0}]));
+  rows.forEach(r=>{
+    const g=normContent(r.formContent||r.content);
+    if(!groups[g]) groups[g]={obsVol:0,vol15:0,mt:0,initialM3:0,finalM3:0,receivedM3:0,initialMT:0,finalMT:0,receivedMT:0};
+    groups[g].obsVol += Number(r.obsVol||0);
+    groups[g].vol15 += Number(r.vol15||0);
+    groups[g].mt += Number(r.mt||0);
+    groups[g].initialM3 += Number(r.initialM3||0);
+    groups[g].finalM3 += Number(r.finalM3||0);
+    groups[g].receivedM3 += Number(r.receivedM3||0);
+    groups[g].initialMT += Number(r.initialMT||0);
+    groups[g].finalMT += Number(r.finalMT||0);
+    groups[g].receivedMT += Number(r.receivedMT||0);
+  });
+  return groups;
+}
+function appendVSTEC026ProductTotals(xml, rows){
+  const groups=totalsByContent(rows);
+  xml += rowXml([]);
+  xml += rowXml(['PRODUCT TOTALS','','','','','','','','','Volume m³','','','','Volume @15°C','Mass MT','','','',''],
+                ['String','String','String','String','String','String','String','String','String','String','String','String','String','String','String','String','String','String']);
+  productGroups().forEach(g=>{
+    const t=groups[g]||{obsVol:0,vol15:0,mt:0};
+    xml += rowXml(['TOTAL '+g,'','','','','','','','',zeroIfEmpty(t.obsVol,2),'','','',zeroIfEmpty(t.vol15,2),zeroIfEmpty(t.mt,3),'','','',''],
+                  ['String','String','String','String','String','String','String','String','Number','String','String','String','Number','Number','String','String','String','String']);
+  });
+  return xml;
+}
+function rowsToCompanyVSTEC026Sheet(title, stage){
+  const rows=fullRowsForStage(stage);
+  let xml=formHeaderRows(title);
+  xml += rowXml(['Tank','Content','S%','Meas. Type','Date','Time','Measurement cm','Volume m³','Temp. °C','Sp.Gr. / Density @15°C','Corr. Factor / VCF','Corrected Volume @15°C','Mass or Weight (MT)','Tank (m³)','TRIM','HEEL/LIST','REMARKS']);
+  rows.forEach(r=>{
+    const measText = r.empty ? '0.0' : (r.measurementType==='Ullage'?'U ':'S ')+zeroIfEmpty(r.measurement,1);
+    xml += rowXml([
+      r.formTankLabel, r.formContent, zeroIfEmpty(r.sulphurPct||0,3), r.measurementType||'', r.date||'', r.time||'', measText,
+      zeroIfEmpty(r.obsVol,2), zeroIfEmpty(r.temp,1),
+      zeroIfEmpty(r.density15,1), zeroIfEmpty(r.vcfUsed,5), zeroIfEmpty(r.vol15,2), zeroIfEmpty(r.mt,3),
+      zeroIfEmpty(r.formTankM3||r.tankCap,2), zeroIfEmpty(r.trim,2),
+      r.heelDir==='0'?'0':zeroIfEmpty(r.heelVal,2)+' '+r.heelDir,
+      (r.empty?'':r.overflow+(r.remarks?'; '+r.remarks:''))
+    ], ['String','String','Number','String','String','String','String','Number','Number','Number','Number','Number','Number','Number','Number','Number','Number','String','String']);
+  });
+  const totalM3=rows.reduce((a,r)=>a+Number(r.obsVol||0),0), total15=rows.reduce((a,r)=>a+Number(r.vol15||0),0), totalMT=rows.reduce((a,r)=>a+Number(r.mt||0),0);
+  xml += rowXml(['GRAND TOTAL','','','','','','','','',zeroIfEmpty(totalM3,2),'','','',zeroIfEmpty(total15,2),zeroIfEmpty(totalMT,3),'','','',''],
+                ['String','String','String','String','String','String','String','String','Number','String','String','String','Number','Number','String','String','String','String']);
+  xml = appendVSTEC026ProductTotals(xml, rows);
+  xml += rowXml([]);
+  xml += rowXml(['REMARK: TO BE SIGNED FROM BOTH CHIEF ENGINEERS IN CASE OF HAND-OVER REPORT.']);
+  xml += rowXml(['CHIEF ENGINEER','','','','','','','','','SIGN-ON CHIEF ENGINEER']);
+  xml += rowXml(['Name:','','','','','','','','','Name:']);
+  xml += rowXml(['Signature:','','','','','','','','','Signature:']);
+  return xml;
+}
+function rowsToCompanyVSTEC015Sheet(){
+  const before=fullRowsForStage('before');
+  const after=fullRowsForStage('after');
+  const byIdBefore=Object.fromEntries(before.map(r=>[r.tankId,r]));
+  const byIdAfter=Object.fromEntries(after.map(r=>[r.tankId,r]));
+  const company=document.getElementById('company').value||'COSTAMARE SHIPPING COMPANY S.A';
+  const vessel=document.getElementById('vessel').value||'';
+  const port=document.getElementById('port').value||'';
+  let xml = rowXml([company]) + rowXml(['Form: Bunker Plan / VS.TEC 015']) + rowXml(['C/V:', vessel, 'DATE:', new Date().toLocaleDateString(), 'PORT:', port]) + rowXml([]);
+  xml += rowXml(['TANK','CONTENT','S%','INITIAL CUMT','INITIAL M.TON','FINAL CUMT','FINAL M.TON','RECEIVED CUMT','RECEIVED M.TON','REMARKS']);
+  const diffFullRows=[];
+  formTankRows.forEach(meta=>{
+    const b=byIdBefore[meta.tankId], a=byIdAfter[meta.tankId];
+    const initM3=Number(b&&b.obsVol||0), finalM3=Number(a&&a.obsVol||0), initMT=Number(b&&b.mt||0), finalMT=Number(a&&a.mt||0);
+    const recM3=finalM3-initM3, recMT=finalMT-initMT;
+    let rem=''; if(!b || b.empty) rem+='No before reading. '; if(!a || a.empty) rem+='No after reading.';
+    const drow={tankId:meta.tankId, formContent:(a&&a.content)||(b&&b.content)||meta.content, content:(a&&a.content)||(b&&b.content)||meta.content, sulphurPct:(a&&a.sulphurPct)||(b&&b.sulphurPct)||0, initialM3:initM3, finalM3:finalM3, receivedM3:recM3, initialMT:initMT, finalMT:finalMT, receivedMT:recMT};
+    diffFullRows.push(drow);
+    xml += rowXml([meta.label,(a&&a.content)||(b&&b.content)||meta.content,zeroIfEmpty((a&&a.sulphurPct)||(b&&b.sulphurPct)||0,3),zeroIfEmpty(initM3,2),zeroIfEmpty(initMT,3),zeroIfEmpty(finalM3,2),zeroIfEmpty(finalMT,3),zeroIfEmpty(recM3,2),zeroIfEmpty(recMT,3),rem],
+                  ['String','String','Number','Number','Number','Number','Number','Number','Number','String']);
+  });
+  const totals=diffFullRows.reduce((acc,r)=>{acc.i3+=r.initialM3; acc.f3+=r.finalM3; acc.r3+=r.receivedM3; acc.it+=r.initialMT; acc.ft+=r.finalMT; acc.rt+=r.receivedMT; return acc;},{i3:0,f3:0,r3:0,it:0,ft:0,rt:0});
+  xml += rowXml(['GRAND TOTAL','','',zeroIfEmpty(totals.i3,2),zeroIfEmpty(totals.it,3),zeroIfEmpty(totals.f3,2),zeroIfEmpty(totals.ft,3),zeroIfEmpty(totals.r3,2),zeroIfEmpty(totals.rt,3),''],
+                ['String','String','Number','Number','Number','Number','Number','Number','Number','String']);
+  xml += rowXml([]);
+  xml += rowXml(['PRODUCT TOTALS','','','INITIAL CUMT','INITIAL M.TON','FINAL CUMT','FINAL M.TON','RECEIVED CUMT','RECEIVED M.TON','']);
+  const productTotals=totalsByContent(diffFullRows);
+  productGroups().forEach(g=>{
+    const t=productTotals[g]||{};
+    xml += rowXml(['TOTAL '+g, g, '', zeroIfEmpty(t.initialM3,2), zeroIfEmpty(t.initialMT,3), zeroIfEmpty(t.finalM3,2), zeroIfEmpty(t.finalMT,3), zeroIfEmpty(t.receivedM3,2), zeroIfEmpty(t.receivedMT,3), ''],
+                  ['String','String','Number','Number','Number','Number','Number','Number','Number','String']);
+  });
+  xml += rowXml([]) + rowXml(['Signed for supplier:','','','','','','Port / Position / Date']);
+  return xml;
+}
+function worksheetXml(name, rowsXml){return '<Worksheet ss:Name="'+xmlEscape(name).slice(0,31)+'"><Table>'+rowsXml+'</Table></Worksheet>';}
+function exportCompanyXLS(){
+  if (window.trackAppEvent) window.trackAppEvent('export_xls');
+  const xml = '<?xml version="1.0"?><?mso-application progid="Excel.Sheet"?>' +
+  '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">' +
+  '<Styles><Style ss:ID="Default" ss:Name="Normal"><Alignment ss:Vertical="Center"/><Font ss:FontName="Arial" ss:Size="10"/></Style></Styles>' +
+  worksheetXml('VS.TEC026 Before', rowsToCompanyVSTEC026Sheet('Bunkers Record Book Page Format - BEFORE BUNKERING', 'before')) +
+  worksheetXml('VS.TEC026 After', rowsToCompanyVSTEC026Sheet('Bunkers Record Book Page Format - AFTER BUNKERING', 'after')) +
+  worksheetXml('VS.TEC015', rowsToCompanyVSTEC015Sheet()) +
+  '</Workbook>';
+  const blob=new Blob([xml],{type:'application/vnd.ms-excel'});
+  const url=URL.createObjectURL(blob), a=document.createElement('a');
+  const vessel=(document.getElementById('vessel').value||'VESSEL').replace(/[^A-Za-z0-9_-]+/g,'_');
+  a.href=url; a.download='VS_TEC_026_BEFORE_AFTER_015_'+vessel+'.xls'; a.click(); URL.revokeObjectURL(url);
+}
+
+
+// =========================
+// v12 template-style XLS export based on uploaded company forms
+// Sheets: 015 BP / 026 BFR / 026 AFT
+// =========================
+function escXml(v){
+  if(v===null || v===undefined) return '';
+  return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function cellStyled(v,type,style,mergeAcross){
+  const st = style ? ' ss:StyleID="'+style+'"' : '';
+  const ma = mergeAcross ? ' ss:MergeAcross="'+mergeAcross+'"' : '';
+  if(v===null || v===undefined || v==='') return '<Cell'+st+ma+'><Data ss:Type="String"></Data></Cell>';
+  const isNum = (type==='Number' && isFinite(Number(v)));
+  return '<Cell'+st+ma+'><Data ss:Type="'+(isNum?'Number':'String')+'">'+(isNum?Number(v):escXml(v))+'</Data></Cell>';
+}
+function rowStyled(cells, height){
+  const h = height ? ' ss:Height="'+height+'"' : '';
+  return '<Row'+h+'>'+cells.map(c=>Array.isArray(c)?cellStyled(c[0],c[1],c[2],c[3]):cellStyled(c)).join('')+'</Row>';
+}
+function n(v,d=2){return isFinite(Number(v))?Number(v).toFixed(d):Number(0).toFixed(d);}
+function xlsStylesV12(){return `
+<Styles>
+  <Style ss:ID="Default" ss:Name="Normal"><Alignment ss:Vertical="Center"/><Font ss:FontName="Arial" ss:Size="8"/></Style>
+  <Style ss:ID="company"><Alignment ss:Horizontal="Center" ss:Vertical="Center"/><Font ss:FontName="Arial" ss:Size="12" ss:Bold="1"/></Style>
+  <Style ss:ID="formtitle"><Alignment ss:Horizontal="Center" ss:Vertical="Center"/><Font ss:FontName="Arial" ss:Size="11" ss:Bold="1"/></Style>
+  <Style ss:ID="small"><Font ss:FontName="Arial" ss:Size="7"/></Style>
+  <Style ss:ID="label"><Font ss:FontName="Arial" ss:Size="8" ss:Bold="1"/></Style>
+  <Style ss:ID="head"><Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/><Font ss:FontName="Arial" ss:Size="8" ss:Bold="1"/><Interior ss:Color="#D9D9D9" ss:Pattern="Solid"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style>
+  <Style ss:ID="data"><Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/><Font ss:FontName="Arial" ss:Size="8"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style>
+  <Style ss:ID="leftdata"><Alignment ss:Horizontal="Left" ss:Vertical="Center" ss:WrapText="1"/><Font ss:FontName="Arial" ss:Size="8"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style>
+  <Style ss:ID="num"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Font ss:FontName="Arial" ss:Size="8"/><NumberFormat ss:Format="0.000"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style>
+  <Style ss:ID="num2"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Font ss:FontName="Arial" ss:Size="8"/><NumberFormat ss:Format="0.00"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style>
+  <Style ss:ID="total"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Font ss:FontName="Arial" ss:Size="8" ss:Bold="1"/><Interior ss:Color="#F2F2F2" ss:Pattern="Solid"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style>
+  <Style ss:ID="warn"><Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/><Font ss:FontName="Arial" ss:Size="8" ss:Color="#9C5700"/><Interior ss:Color="#FFF2CC" ss:Pattern="Solid"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style>
+</Styles>`;}
+function worksheetOptionsV12(){return `<WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
+<PageSetup><Layout x:Orientation="Landscape"/><Header x:Margin="0.20"/><Footer x:Margin="0.20"/><PageMargins x:Bottom="0.25" x:Left="0.20" x:Right="0.20" x:Top="0.25"/></PageSetup>
+<FitToPage/><Print><ValidPrinterInfo/><PaperSizeIndex>9</PaperSizeIndex><FitWidth>1</FitWidth><FitHeight>1</FitHeight><HorizontalResolution>600</HorizontalResolution><VerticalResolution>600</VerticalResolution></Print>
+<Selected/>
+</WorksheetOptions>`;}
+function colsV12(widths){return widths.map(w=>'<Column ss:AutoFitWidth="0" ss:Width="'+w+'"/>').join('');}
+function tankDisplayValueForTemplate(r){
+  if(r.empty) return '';
+  return (r.measurementType==='Ullage'?'U ':'S ')+n(r.measurement,1);
+}
+function heelDisplay(r){return (!r.heelDir || r.heelDir==='0') ? '0' : n(r.heelVal,2)+' '+r.heelDir;}
+function formRows026Template(stage, title){
+  const rows=fullRowsForStage(stage);
+  const company=document.getElementById('company').value||'COSTAMARE SHIPPING COMPANY S.A';
+  const vessel=document.getElementById('vessel').value||'';
+  const port=document.getElementById('port').value||'';
+  const sea=document.getElementById('seaTemp').value||'';
+  const air=document.getElementById('airTemp').value||'';
+  const df=document.getElementById('draftFwd').value||'';
+  const da=document.getElementById('draftAft').value||'';
+  const today=new Date().toLocaleDateString();
+  let xml='';
+  xml += rowStyled([[company,'String','company',17]],18);
+  xml += rowStyled([['Form No.:VS.TEC.026','String','small',4],['File:E-5','String','small',4],[today,'String','small',4],['Page 1 of 1','String','small',4]],14);
+  xml += rowStyled([['','String','Default',17]],4);
+  xml += rowStyled([['Bunkers Record Book Page Format.','String','formtitle',17]],16);
+  xml += rowStyled([['','String','Default',17]],4);
+  xml += rowStyled([['SOUNDING CALCULATION SHEET FOR LOADED/LIGHT CONDITION.','String','formtitle',17]],16);
+  xml += rowStyled([[title,'String','formtitle',17]],18);
+  xml += rowStyled([['SHIP NAME:','String','label'],[vessel,'String','data',3],['PORT:','String','label'],[port,'String','data',3],['SEA TEMP.:','String','label'],[sea,'String','data'],['DR.FWD:','String','label'],[df,'String','data'],['DR.AFT:','String','label'],[da,'String','data']],16);
+  xml += rowStyled([['DATE:','String','label'],[today,'String','data',3],['TIME:','String','label'],[new Date().toLocaleTimeString().slice(0,5),'String','data',2],['AIR TEMP.:','String','label'],[air,'String','data'],['TRIM:','String','label'],['per row','String','data'],['LIST:','String','label'],['per row','String','data']],16);
+  xml += rowStyled([['','String','Default',17]],6);
+  xml += rowStyled([
+    ['Tank','String','head'],['Content','String','head'],['Meas. Type','String','head'],['Value cm','String','head'],['Obs Volume','String','head'],['Temp.','String','head'],['Content S%','String','head'],['Density @ 15°C','String','head'],['VCF','String','head'],['Volume @ 15°C','String','head'],['Mass / Weight','String','head'],['Tank Capacity','String','head'],['TRIM (m)','String','head'],['HEEL / LIST','String','head'],['Method','String','head'],['Remarks','String','head']
+  ],28);
+  xml += rowStyled([
+    ['','String','head'],['','String','head'],['','String','head'],['(cm)','String','head'],['(m³)','String','head'],['(°C)','String','head'],['','String','head'],['(kg/m³)','String','head'],['','String','head'],['(m³)','String','head'],['(MT)','String','head'],['(m³)','String','head'],['','String','head'],['','String','head'],['','String','head'],['','String','head']
+  ],18);
+  rows.forEach(r=>{
+    xml += rowStyled([
+      [r.formTankLabel,'String','leftdata'],[r.formContent,'String','data'],[r.empty?'':r.measurementType,'String','data'],[r.empty?0:r.measurement,'Number','num2'],[r.empty?0:r.obsVol,'Number','num2'],[r.empty?0:r.temp,'Number','num2'],[r.sulphurPct||0,'Number','num'],[r.empty?0:r.density15,'Number','num2'],[r.empty?0:r.vcfUsed,'Number','num'],[r.empty?0:r.vol15,'Number','num2'],[r.empty?0:r.mt,'Number','num'],[r.formTankM3||r.tankCap||0,'Number','num2'],[r.empty?0:r.trim,'Number','num2'],[r.empty?'0':heelDisplay(r),'String','data'],[r.empty?'':(r.vcfSource||r.vcfMode||''),'String','data'],[r.empty?'':r.overflow+(r.remarks?'; '+r.remarks:''),'String',r.overflow&&r.overflow!=='OK'?'warn':'data']
+    ],20);
+  });
+  const sums=rows.reduce((a,r)=>{a.obs+=Number(r.obsVol||0);a.v15+=Number(r.vol15||0);a.mt+=Number(r.mt||0);return a;},{obs:0,v15:0,mt:0});
+  xml += rowStyled([['TOTALING','String','total',3],['','String','total'],[sums.obs,'Number','total'],['','','total'],['','','total'],['','','total'],['','','total'],[sums.v15,'Number','total'],[sums.mt,'Number','total'],['','','total'],['','','total'],['','','total'],['','','total'],['','','total']],20);
+  const groups=totalsByContent(rows);
+  productGroups().forEach(g=>{ const t=groups[g]||{obsVol:0,vol15:0,mt:0}; xml += rowStyled([[g,'String','leftdata'],['','String','data'],['','String','data'],['','String','data'],[t.obsVol||0,'Number','num2'],['','','data'],['','','data'],['','','data'],['','','data'],[t.vol15||0,'Number','num2'],[t.mt||0,'Number','num'],['','','data'],['','','data'],['','','data'],['','','data'],['','','data']],18); });
+  xml += rowStyled([['REMARK: TO BE SIGNED FROM BOTH CHIEF ENGINEERS IN CASE OF HAND-OVER REPORT.','String','small',15]],16);
+  xml += rowStyled([['CHIEF ENGINEER','String','label',4],['SIGN-ON CHIEF ENGINEER','String','label',5]],18);
+  xml += rowStyled([['Name:','String','small',4],['Name:','String','small',5]],18);
+  xml += rowStyled([['Signature:','String','small',4],['Signature:','String','small',5]],18);
+  return xml;
+}
+function formRows015Template(){
+  const before=fullRowsForStage('before');
+  const after=fullRowsForStage('after');
+  const byIdBefore=Object.fromEntries(before.map(r=>[r.tankId,r]));
+  const byIdAfter=Object.fromEntries(after.map(r=>[r.tankId,r]));
+  const company=document.getElementById('company').value||'COSTAMARE SHIPPING COMPANY S.A';
+  const vessel=document.getElementById('vessel').value||'';
+  const port=document.getElementById('port').value||'';
+  const today=new Date().toLocaleDateString();
+
+  const headerRows015 = ()=>{
+    let xml='';
+    xml += rowStyled([[company,'String','company',10]],16);
+    xml += rowStyled([['Form No.: VS.TEC.015','String','small',2],['File E-5','String','small',2],[today,'String','small',2],['Page 1 of 1','String','small',2],['','String','small',2]],12);
+    xml += rowStyled([['Form :','String','label'],['Bunker Plan.','String','formtitle',3],['C/V:','String','label'],[vessel,'String','data',3],['DATE:','String','label'],[today,'String','data']],14);
+    xml += rowStyled([['PORT:','String','label'],[port,'String','data',3],['','String','Default',6]],14);
+    return xml;
+  };
+
+  const sectionHeader015 = (title)=>{
+    let xml='';
+    xml += rowStyled([[title,'String','formtitle',10]],16);
+    return xml;
+  };
+
+  const bunkerSubHeader015 = ()=>{
+    let xml='';
+    xml += rowStyled([['TANKS','String','head'],['CONTENT','String','head'],['S%','String','head'],['INITIAL','String','head',1],['FINAL','String','head',1],['RECEIVED','String','head',1],['REMARKS','String','head']],20);
+    xml += rowStyled([['','String','head'],['','String','head'],['','String','head'],['CU.MT.','String','head'],['M.TON.','String','head'],['CU.MT.','String','head'],['M.TON.','String','head'],['CU.MT.','String','head'],['M.TON.','String','head'],['','String','head']],18);
+    return xml;
+  };
+
+  let xml='';
+  xml += headerRows015();
+
+  // BARGE READINGS section: kept as in the company template, intentionally blank for manual barge data.
+  xml += sectionHeader015('BARGE READINGS');
+  xml += rowStyled([['','String','Default',3],['NAME:','String','label'],['','String','data',5]],14);
+  xml += rowStyled([['Specific gravity at 15 C:','String','small',4],['Official Barge Gauge Meter:','String','small',3],['','String','small',3]],14);
+  xml += rowStyled([['Actual Temperature:','String','small',4],['Initial reading:','String','small',3],['','String','small',3]],14);
+  xml += rowStyled([['Specific gravity at Actual Temperature:','String','small',4],['Final reading:','String','small',3],['','String','small',3]],14);
+  xml += bunkerSubHeader015();
+  for(let i=0;i<8;i++){
+    xml += rowStyled([['','String','leftdata'],['','String','data'],['','String','data'],['','String','data'],['','String','data'],['','String','data'],['','String','data'],['','String','data'],['','String','data'],['No before reading. No after reading.','String','warn']],18);
+  }
+
+  // SHIP READINGS section: automatically filled from the latest saved Before / After readings.
+  xml += sectionHeader015('SHIP READINGS');
+  xml += bunkerSubHeader015();
+
+  const diffFullRows=[];
+  formTankRows.forEach(meta=>{
+    const b=byIdBefore[meta.tankId], a=byIdAfter[meta.tankId];
+    const initM3=Number(b&&b.obsVol||0), finalM3=Number(a&&a.obsVol||0), initMT=Number(b&&b.mt||0), finalMT=Number(a&&a.mt||0);
+    const recM3=finalM3-initM3, recMT=finalMT-initMT;
+    const content=(a&&a.content)||(b&&b.content)||meta.content; const sp=(a&&a.sulphurPct)||(b&&b.sulphurPct)||0;
+    let rem=''; if(!b || b.empty) rem+='No before reading. '; if(!a || a.empty) rem+='No after reading.';
+    diffFullRows.push({content,initialM3:initM3,finalM3:finalM3,receivedM3:recM3,initialMT:initMT,finalMT:finalMT,receivedMT:recMT});
+    xml += rowStyled([[meta.label,'String','leftdata'],[content,'String','data'],[sp,'Number','num'],[initM3,'Number','num2'],[initMT,'Number','num'],[finalM3,'Number','num2'],[finalMT,'Number','num'],[recM3,'Number','num2'],[recMT,'Number','num'],[rem,'String',rem?'warn':'data']],20);
+  });
+  const totals=diffFullRows.reduce((acc,r)=>{acc.i3+=r.initialM3;acc.f3+=r.finalM3;acc.r3+=r.receivedM3;acc.it+=r.initialMT;acc.ft+=r.finalMT;acc.rt+=r.receivedMT;return acc;},{i3:0,f3:0,r3:0,it:0,ft:0,rt:0});
+  xml += rowStyled([['GRAND TOTAL','String','total',2],[totals.i3,'Number','total'],[totals.it,'Number','total'],[totals.f3,'Number','total'],[totals.ft,'Number','total'],[totals.r3,'Number','total'],[totals.rt,'Number','total'],['','String','total']],20);
+
+  xml += rowStyled([['','String','Default',10]],6);
+  xml += rowStyled([['PRODUCT TOTALS','String','formtitle',10]],18);
+  const productTotals=totalsByContent(diffFullRows);
+  productGroups().forEach(g=>{ const t=productTotals[g]||{}; xml += rowStyled([[g,'String','leftdata'],['','String','data'],['','String','data'],[t.initialM3||0,'Number','num2'],[t.initialMT||0,'Number','num'],[t.finalM3||0,'Number','num2'],[t.finalMT||0,'Number','num'],[t.receivedM3||0,'Number','num2'],[t.receivedMT||0,'Number','num'],['','String','data']],18); });
+
+  xml += rowStyled([['Signed for supplier:','String','small',5],['Port / Position / Date','String','small',4]],20);
+  return xml;
+}
+
+function worksheetXmlV12(name, rowsXml, widths){
+  return '<Worksheet ss:Name="'+escXml(name).slice(0,31)+'"><Table>'+colsV12(widths)+rowsXml+'</Table>'+worksheetOptionsV12()+'</Worksheet>';
+}
+function exportCompanyXLS(){
+  const widths026=[100,55,50,50,60,50,55,75,50,70,65,65,50,55,70,105];
+  const widths015=[120,55,45,65,65,65,65,65,65,140];
+  const xml = '<?xml version="1.0"?><?mso-application progid="Excel.Sheet"?>' +
+  '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">' +
+  xlsStylesV12() +
+  worksheetXmlV12('015 BP', formRows015Template(), widths015) +
+  worksheetXmlV12('026 BFR', formRows026Template('before','SOUNDING FOR: BEFORE BUNKERING'), widths026) +
+  worksheetXmlV12('026 AFT', formRows026Template('after','SOUNDING FOR: AFTER BUNKERING'), widths026) +
+  '</Workbook>';
+  const blob=new Blob([xml],{type:'application/vnd.ms-excel'});
+  const url=URL.createObjectURL(blob), a=document.createElement('a');
+  const vessel=(document.getElementById('vessel').value||'VESSEL').replace(/[^A-Za-z0-9_-]+/g,'_');
+  a.href=url; a.download='VS_TEC_015_026_TEMPLATE_'+vessel+'.xls'; a.click(); URL.revokeObjectURL(url);
+}
+
+
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded', init);
+}else{
+  init();
+}
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('./service-worker.js').catch(function (err) {
+      console.warn('Service worker registration failed:', err);
+    });
+  });
+}
+</script>
+
+
+<script>
+/* Anonymous Analytics Block
+   App: BunkerReport_v57_CapeAkritas / BY-7 Fuel Bunkering
+   Domain: kalodoukas.github.io
+   Provider: Plausible Analytics
+   Privacy: no names, no emails, no entered values, no vessel data.
+*/
+(function () {
+  const APP_NAME = 'BunkerReport_v57_CapeAkritas';
+  const APP_PATH = window.location.pathname;
+
+  window.trackAppEvent = function (eventName, extraProps = {}) {
+    if (typeof window.plausible === 'function') {
+      window.plausible(eventName, {
+        props: {
+          app: APP_NAME,
+          path: APP_PATH,
+          ...extraProps
+        }
+      });
+    }
+  };
+
+  window.addEventListener('load', function () {
+    window.trackAppEvent('app_open');
+  });
+
+  const originalPrint = window.print;
+  window.print = function () {
+    window.trackAppEvent('print_pdf');
+    originalPrint.call(window);
+  };
+})();
+
+window.addEventListener('appinstalled', function () {
+  if (window.trackAppEvent) window.trackAppEvent('install_pwa');
+});
+</script>
+
+</body>
+</html>
