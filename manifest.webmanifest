@@ -1,7 +1,7 @@
 {
   "name": "BY-7 Fuel Bunkering Calculator",
   "short_name": "BY-7 Bunkering",
-  "description": "BY-7 Fuel Bunkering Calculator v60 - PWA with anonymous Plausible analytics - header label fixed",
+  "description": "BY-7 Fuel Bunkering Calculator v60.2.3 - locked build - VS.TEC 015 Barge rows fixed",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

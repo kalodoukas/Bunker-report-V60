@@ -31,3 +31,11 @@ Analytics update v60:
 - Browser, operating system, device type, country and page path are provided by the Plausible dashboard.
 
 Header label fix: visible application header now shows v60.
+
+Update v60.2: VS.TEC 015 BARGE READINGS tank measurement blank rows reduced by 3 rows (from 8 to 5).
+
+Update v60.2.3:
+- Protected/locked build regenerated.
+- VS.TEC 015 BARGE READINGS blank tank rows remain reduced by 3 rows: 8 -> 5.
+- app.js SHA-256 checksum recalculated and written to index.html.
+- New checksum: 060a602df5709e638a3f72159d027090874ab26e53bf7adc0807fe8e2db5d993
